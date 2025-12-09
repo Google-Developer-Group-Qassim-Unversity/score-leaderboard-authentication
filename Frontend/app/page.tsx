@@ -4,9 +4,9 @@ import { auth } from "@clerk/nextjs/server"
 export default async function RootPage() {
   const { userId, sessionClaims } = await auth()
 
-  // Redirect unauthenticated users to sign-in
+  // Redirect unauthenticated users to sign-up
   if (!userId) {
-    redirect('/sign-in')
+    redirect('/sign-up')
   }
 
   // Redirect authenticated but not onboarded users to onboarding

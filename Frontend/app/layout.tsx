@@ -21,18 +21,6 @@ export default function RootLayout({
         <head>
           <link rel="icon" href="/favicon.png" type="image/png"/>
           <link rel="manifest" href="/manifest.json" />
-          <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-Z62ENW3LFQ"
-            strategy="afterInteractive"
-          />
-          <Script id="gtag-init" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-Z62ENW3LFQ');
-            `}
-          </Script>
         </head>
         <body className="font-sans">
           {/* TODO: Add a better loading indicator */}

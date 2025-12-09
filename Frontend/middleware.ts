@@ -13,8 +13,8 @@ export default clerkMiddleware(async (auth, req) => {
   // Handle root route
   if (isRootRoute(req)) {
     if (!userId) {
-      // Redirect unauthenticated users to sign-in
-      return NextResponse.redirect(new URL('/sign-in', req.url))
+      // Redirect unauthenticated users to sign-up
+      return NextResponse.redirect(new URL('/sign-up', req.url))
     }
     
     if (!sessionClaims?.metadata?.onboardingComplete) {
@@ -34,7 +34,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Allow onboarding route for authenticated users
   if (isOnboardingRoute(req)) {
     if (!userId) {
-      return NextResponse.redirect(new URL('/sign-in', req.url))
+      return NextResponse.redirect(new URL('/sign-up', req.url))
     }
     return NextResponse.next()
   }
@@ -42,7 +42,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Allow user-profile route only for authenticated users who completed onboarding
   if (isUserProfileRoute(req)) {
     if (!userId) {
-      return NextResponse.redirect(new URL('/sign-in', req.url))
+      return NextResponse.redirect(new URL('/sign-up', req.url))
     }
     
     if (!sessionClaims?.metadata?.onboardingComplete) {
