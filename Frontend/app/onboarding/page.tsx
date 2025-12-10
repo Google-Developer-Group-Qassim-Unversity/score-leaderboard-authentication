@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useUser, useAuth } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,6 +25,7 @@ import { AlertCircle, Loader2, Lock } from 'lucide-react'
 import { completeOnboarding, type OnboardingFormData } from './_actions'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { UserAccountCard } from '@/components/user-account-card'
+import { createMember } from '@/lib/api'
 
 // Form validation schema
 const onboardingSchema = z.object({
@@ -37,7 +38,7 @@ const onboardingSchema = z.object({
     .string()
     .length(10, 'Phone number must be exactly 10 digits')
     .regex(/^05\d{8}$/, 'Phone number must start with 05 followed by 8 digits'),
-  gender: z.enum(['male', 'female'], {
+  gender: z.enum(['Male', 'Female'], {
     required_error: 'Please select a gender',
   }),
   personalEmail: z
@@ -56,6 +57,7 @@ type OnboardingFormValues = z.infer<typeof onboardingSchema>
 
 export default function OnboardingPage() {
   const { user } = useUser()
+  const { getToken } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = React.useState('')
@@ -93,15 +95,31 @@ export default function OnboardingPage() {
     setIsSubmitting(true)
 
     try {
+      // Step 1: Update Clerk metadata
       const result = await completeOnboarding(data as OnboardingFormData)
 
       if (result.error) {
         setError(result.error)
-      } else if (result.success) {
-        // Reload user data to get updated metadata
+        setIsSubmitting(false)
+        return
+      }
+
+      if (result?.success) {
+        // Step 2: Reload user to get fresh token with updated metadata
         await user?.reload()
         
-        // Check for redirect URL from another app
+        // Step 3: Get fresh token and create member in backend (info from JWT)
+        const token = await getToken()
+        if (token) {
+          const memberCreated = await createMember(token)
+          if (!memberCreated) {
+            console.log('⚠️ Skipping member creation in backend!')
+            // Message from @albrrak773: Only throw error for debugging.
+            // throw new Error('Member creation failed')
+          }
+        }
+        
+        // Step 4: Handle redirect
         const redirectUrl = searchParams.get('redirect_url')
         if (redirectUrl && isAllowedRedirectUrl(redirectUrl)) {
           window.location.href = redirectUrl
@@ -228,7 +246,7 @@ export default function OnboardingPage() {
                       >
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
-                            <RadioGroupItem value="male" />
+                            <RadioGroupItem value="Male" />
                           </FormControl>
                           <FormLabel className="font-normal cursor-pointer" dir="rtl">
                             طلاب
@@ -236,7 +254,7 @@ export default function OnboardingPage() {
                         </FormItem>
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl>
-                            <RadioGroupItem value="female" />
+                            <RadioGroupItem value="Female" />
                           </FormControl>
                           <FormLabel className="font-normal cursor-pointer" dir="rtl">
                             طالبات

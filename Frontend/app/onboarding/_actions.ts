@@ -6,7 +6,7 @@ export interface OnboardingFormData {
   uni_id: string
   fullArabicName: string
   saudiPhone: string
-  gender: 'male' | 'female'
+  gender: 'Male' | 'Female'
   personalEmail: string
 }
 
@@ -18,8 +18,10 @@ export const completeOnboarding = async (formData: OnboardingFormData) => {
   }
 
   const client = await clerkClient()
+  
+  // Update Clerk metadata (JWT will be refreshed on client side)
   try {
-    const res = await client.users.updateUser(userId, {
+    await client.users.updateUser(userId, {
       publicMetadata: {
         onboardingComplete: true,
         uni_id: formData.uni_id,
@@ -29,7 +31,7 @@ export const completeOnboarding = async (formData: OnboardingFormData) => {
         personalEmail: formData.personalEmail,
       },
     })
-    return { success: true, metadata: res.publicMetadata }
+    return { success: true }
   } catch (err) {
     return { error: 'There was an error updating the user metadata.' }
   }

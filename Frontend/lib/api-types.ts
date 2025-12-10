@@ -138,3 +138,15 @@ export interface FormSubmissionResponse {
     value: string
   }[]
 }
+
+// ===== Member Creation Types =====
+
+export interface CreateMemberResponse {
+  id: number
+  name: string
+  email: string
+  phone_number: string
+  uni_id: number
+  gender: "Male" | "Female"
+  already_exists: boolean
+}

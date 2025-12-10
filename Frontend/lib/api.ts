@@ -15,6 +15,7 @@ import type {
   PointsHistoryEntry,
   LeaderboardSummary,
   ApiEventForm,
+  CreateMemberResponse,
 } from "./api-types"
 
 // Re-export all types for backward compatibility
@@ -33,6 +34,7 @@ export type {
   PointsHistoryEntry,
   LeaderboardSummary,
   ApiEventForm,
+  CreateMemberResponse,
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST || "http://178.128.205.239:8000";
@@ -187,6 +189,33 @@ export async function fetchEventForm(eventId: number): Promise<ApiEventForm | nu
 
   } catch (error) {
     console.error(`❌ Failed to fetch form for event ${eventId}:`, error)
+    return null
+  }
+}
+
+export async function createMember(token: string): Promise<CreateMemberResponse | null> {
+  try {
+    console.log(`🔍 Creating member from JWT token...`)
+    
+    const response = await fetch(`${API_BASE_URL}/members`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      console.warn(`⚠️ Skipping member creation ${response.status}: ${response.statusText}`)
+      return null
+    }
+
+    const data: CreateMemberResponse = await response.json()
+    console.log(`✅ Successfully created member ${data.id} (already_exists: ${data.already_exists})`)
+    return data
+
+  } catch (error) {
+    console.error(`❌ Failed to create member:`, error)
     return null
   }
 }
