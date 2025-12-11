@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 // Define allowed routes
 const isOnboardingRoute = createRouteMatcher(['/onboarding'])
-const isAuthRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)'])
+const isAuthRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/forgot-password(.*)'])
 const isUserProfileRoute = createRouteMatcher(['/user-profile'])
 const isRootRoute = createRouteMatcher(['/'])
 

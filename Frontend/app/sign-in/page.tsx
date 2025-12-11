@@ -272,6 +272,14 @@ function SignInContent() {
               Sign Up
             </Link>
           </div>
+          <div className="text-sm text-center">
+            <Link 
+              href="/forgot-password"
+              className="text-primary hover:underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </CardFooter>
       </Card>
     </div>
