@@ -32,7 +32,7 @@ export default function OnboardingPage() {
 
     try {
       // Step 1: Update Clerk JWT metadata with the form data
-      const result = await updateUserMetadata(data)
+      const result = await updateUserMetadata({...data, onboardingComplete: true })
       
 
       if (result.error) {
@@ -43,14 +43,11 @@ export default function OnboardingPage() {
       if (result.success) {
 
         // Step 2: Create member in backend DB.
+        await user?.reload() // around 300ms delay to ensure metadata is updated
         const memberCreated = await createMember()
         if (!memberCreated) {
           console.log('⚠️ Skipping member creation in backend!')
         }
-
-        // Step 3: Mark onboarding as complete (asynchronously)
-        await updateUserMetadata({ ...data, onboardingComplete: true })
-
 
         // Step 4: Handle redirect
         const redirectUrl = searchParams.get('redirect_url')
@@ -60,7 +57,8 @@ export default function OnboardingPage() {
         }
         
         // Default redirect to home page
-        router.push('/')
+        router.push('/user-profile')
+        console.log('✅ Onboarding complete, redirected to user-profile')
       } else {
         setError('Unexpected response from server. Please try again.')
       }

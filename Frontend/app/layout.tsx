@@ -3,11 +3,9 @@ import type { Metadata } from "next"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import { Navigation } from "@/components/navigation"
-import { Suspense } from "react"
-import Script from 'next/script';
+
 export const metadata: Metadata = {
-  title: "GDG",
+  title: "GDG Auth",
 }
 
 export default function RootLayout({
@@ -23,11 +21,7 @@ export default function RootLayout({
           <link rel="manifest" href="/manifest.json" />
         </head>
         <body className="font-sans">
-          {/* TODO: Add a better loading indicator */}
-          <Suspense fallback={<div>Loading...</div>}>
-            <Navigation />
-            {children}
-          </Suspense>
+          {children}
           <Analytics />
         </body>
       </html>
