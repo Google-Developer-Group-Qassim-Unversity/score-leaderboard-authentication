@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
+
+const RESEND_COOLDOWN_SECONDS = 60
 
 interface VerificationCardProps {
   type: 'sign-up' | 'sign-in'
@@ -25,6 +27,19 @@ export function VerificationCard({
   const [verificationCode, setVerificationCode] = React.useState('')
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
+  const [resendCooldown, setResendCooldown] = React.useState(RESEND_COOLDOWN_SECONDS)
+  const [resending, setResending] = React.useState(false)
+
+  // Countdown timer for resend button
+  React.useEffect(() => {
+    if (resendCooldown <= 0) return
+
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [resendCooldown])
 
   // Get email from Clerk based on type
   const email = type === 'sign-up' 
@@ -33,6 +48,38 @@ export function VerificationCard({
 
   const title = type === 'sign-up' ? 'Verify Your Email' : 'Two-Factor Authentication'
   const backButtonText = type === 'sign-up' ? 'Back to Sign Up' : 'Back to Sign In'
+
+  const canResend = resendCooldown <= 0
+
+  const handleResendCode = async () => {
+    if (!canResend || resending) return
+
+    setResending(true)
+    setError('')
+
+    try {
+      if (type === 'sign-up') {
+        if (!signUp) {
+          setError('Sign up session not found')
+          return
+        }
+        await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      } else {
+        if (!signIn) {
+          setError('Sign in session not found')
+          return
+        }
+        await signIn.prepareSecondFactor({ strategy: 'email_code' })
+      }
+      // Reset cooldown after successful resend
+      setResendCooldown(RESEND_COOLDOWN_SECONDS)
+    } catch (err: any) {
+      console.error('Resend error:', err)
+      setError(err.errors?.[0]?.message || 'Failed to resend verification code')
+    } finally {
+      setResending(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -119,14 +166,47 @@ export function VerificationCard({
               <Input
                 id="verificationCode"
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="000000"
                 value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '')
+                  setVerificationCode(value)
+                }}
                 disabled={loading}
                 maxLength={6}
                 autoComplete="one-time-code"
-                className="text-center text-lg"
+                className="text-center text-lg tracking-widest font-mono"
               />
+              <div className="flex justify-center pt-1">
+                {canResend ? (
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={handleResendCode}
+                    disabled={resending}
+                    className="text-sm h-auto p-0"
+                  >
+                    {resending ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-1.5 h-3 w-3" />
+                        Resend code
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    Resend code in {resendCooldown}s
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex flex-col gap-2 mt-4">
 
