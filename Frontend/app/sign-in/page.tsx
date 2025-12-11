@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -21,6 +22,7 @@ import {
 import { AlertCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
+import { VerificationCard } from '@/components/verification-card'
 
 const signInSchema = z.object({
   emailAddress: z.string().email('Invalid email address'),
@@ -35,7 +37,6 @@ export default function SignInPage() {
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
   const [needsSecondFactor, setNeedsSecondFactor] = React.useState(false)
-  const [verificationCode, setVerificationCode] = React.useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -133,34 +134,9 @@ export default function SignInPage() {
     }
   }
 
-  const onVerifySecondFactor = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    if (!isLoaded || !verificationCode) return
-    setLoading(true)
-
-    try {
-      const result = await signIn.attemptSecondFactor({
-        strategy: 'email_code',
-        code: verificationCode,
-      })
-
-      if (result.status === 'complete') {
-        // FIX 3: Ensure session ID exists here too
-        if (!result.createdSessionId) {
-            console.error("Session complete but no ID returned")
-            setError('Error creating session.')
-            return
-        }
-        await handleComplete(result.createdSessionId)
-      } else {
-        setError('Verification failed.')
-      }
-    } catch (err: any) {
-      setError(err.errors?.[0]?.longMessage || 'Invalid verification code')
-    } finally {
-      setLoading(false)
-    }
+  // Handle successful verification (2FA)
+  const handleVerificationSuccess = async (sessionId: string) => {
+    await handleComplete(sessionId)
   }
 
   if (!isLoaded || (isLoaded && isSignedIn)) {
@@ -169,6 +145,17 @@ export default function SignInPage() {
         <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">Loading...</span>
       </div>
+    )
+  }
+
+  // Show verification view for second factor
+  if (needsSecondFactor) {
+    return (
+      <VerificationCard
+        type="sign-in"
+        onSuccess={handleVerificationSuccess}
+        onBack={() => setNeedsSecondFactor(false)}
+      />
     )
   }
 
@@ -190,109 +177,57 @@ export default function SignInPage() {
             </Alert>
           )}
 
-          {!needsSecondFactor ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="emailAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>University Email Address</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="442106350@qu.edu.sa"
-                          {...field}
-                          disabled={loading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="emailAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>University Email Address</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="442106350@qu.edu.sa"
+                        {...field}
+                        disabled={loading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter password"
-                          {...field}
-                          disabled={loading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <PasswordInput
+                        placeholder="Enter password"
+                        {...field}
+                        disabled={loading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing In...
-                    </>
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
-              </form>
-            </Form>
-          ) : (
-            <form onSubmit={onVerifySecondFactor} className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  A verification code has been sent to your email. Please enter it below to complete sign-in.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="verificationCode" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Verification Code
-                </label>
-                <Input
-                  id="verificationCode"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  disabled={loading}
-                  maxLength={6}
-                  autoComplete="one-time-code"
-                />
-              </div>
-
-              <Button type="submit" className="w-full" disabled={loading || !verificationCode}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
+                    Signing In...
                   </>
                 ) : (
-                  'Verify Code'
+                  'Sign In'
                 )}
               </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => {
-                  setNeedsSecondFactor(false)
-                  setVerificationCode('')
-                  setError('')
-                }}
-                disabled={loading}
-              >
-                Back to Sign In
-              </Button>
             </form>
-          )}
+          </Form>
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-2">

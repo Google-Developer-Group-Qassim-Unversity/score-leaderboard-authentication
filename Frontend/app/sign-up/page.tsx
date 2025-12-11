@@ -9,9 +9,11 @@ import { z } from 'zod'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { VerificationCard } from '@/components/verification-card'
 import { AlertCircle, Loader2 } from 'lucide-react'
 
 const signUpSchema = z.object({
@@ -26,18 +28,6 @@ const signUpSchema = z.object({
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z
-    .string()
-    .min(1, 'Please confirm your password'),
-  code: z
-    .string()
-    .optional()
-    .refine((val) => !val || val.length === 0 || (val.length === 6 && /^\d+$/.test(val)), {
-      message: 'Code must be exactly 6 digits',
-    }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
 })
 
 type SignUpFormValues = z.infer<typeof signUpSchema>
@@ -55,8 +45,6 @@ export default function SignUpPage() {
     defaultValues: {
       emailAddress: '',
       password: '',
-      confirmPassword: '',
-      code: '',
     },
   })
 
@@ -79,7 +67,7 @@ export default function SignUpPage() {
         strategy: 'email_code',
       })
 
-      // Set 'pendingVerification' true to display verification form
+      // Set 'pendingVerification' true to display verification view
       setPendingVerification(true)
     } catch (err: any) {
       // See https://clerk.com/docs/guides/development/custom-flows/error-handling
@@ -90,68 +78,27 @@ export default function SignUpPage() {
     }
   }
 
-  // Handle submission of the verification form
-  const handleVerify = async (data: SignUpFormValues) => {
-    if (!isLoaded) return
+  // Handle successful verification
+  const handleVerificationSuccess = async (sessionId: string) => {
+    if (!setActive) return
+    
+    await setActive({
+      session: sessionId,
+      navigate: async ({ session }) => {
+        if (session?.currentTask) {
+          console.log('Session task detected:', session.currentTask)
+          router.push('/sign-up/tasks')
+          return
+        }
 
-    setError('')
-    setLoading(true)
-
-    try {
-      if (!data.code || data.code.length !== 6) {
-        setError('Please enter a valid 6-digit verification code')
-        setLoading(false)
-        return
-      }
-
-      // Use the code the user provided to attempt verification
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code: data.code,
-      })
-
-      // If verification was completed, set the session to active and redirect
-      if (signUpAttempt.status === 'complete') {
-        await setActive({
-          session: signUpAttempt.createdSessionId,
-          navigate: async ({ session }) => {
-            if (session?.currentTask) {
-              // Check for session tasks and navigate to custom UI to help users resolve them
-              // See https://clerk.com/docs/guides/development/custom-flows/overview#session-tasks
-              console.log('Session task detected:', session.currentTask)
-              router.push('/sign-up/tasks')
-              return
-            }
-
-            // Preserve redirect URL through onboarding
-            const redirectUrl = searchParams.get('redirect_url')
-            if (redirectUrl) {
-              router.push(`/onboarding?redirect_url=${encodeURIComponent(redirectUrl)}`)
-            } else {
-              router.push('/onboarding')
-            }
-          },
-        })
-      } else {
-        // If the status is not complete, check why. User may need to complete further steps.
-        console.error('Sign-up attempt not complete:', signUpAttempt)
-        console.error('Sign-up attempt status:', signUpAttempt.status)
-        setError('Unable to complete sign up. Please try again.')
-      }
-    } catch (err: any) {
-      // See https://clerk.com/docs/guides/development/custom-flows/error-handling
-      console.error('Verification error:', JSON.stringify(err, null, 2))
-      setError(err.errors?.[0]?.message || 'An error occurred during verification')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const onSubmit = async (data: SignUpFormValues) => {
-    if (!pendingVerification) {
-      await handleSignUp(data)
-    } else {
-      await handleVerify(data)
-    }
+        const redirectUrl = searchParams.get('redirect_url')
+        if (redirectUrl) {
+          router.push(`/onboarding?redirect_url=${encodeURIComponent(redirectUrl)}`)
+        } else {
+          router.push('/onboarding')
+        }
+      },
+    })
   }
 
   if (!isLoaded) {
@@ -162,6 +109,18 @@ export default function SignUpPage() {
     )
   }
 
+  // Show verification view
+  if (pendingVerification) {
+    return (
+      <VerificationCard
+        type="sign-up"
+        onSuccess={handleVerificationSuccess}
+        onBack={() => setPendingVerification(false)}
+      />
+    )
+  }
+
+  // Show sign-up form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
@@ -183,7 +142,7 @@ export default function SignUpPage() {
           )}
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" autoComplete="on">
+            <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-4" autoComplete="on">
               <FormField
                 control={form.control}
                 name="emailAddress"
@@ -195,7 +154,7 @@ export default function SignUpPage() {
                         type="email"
                         placeholder="442106350@qu.edu.sa"
                         autoComplete="email"
-                        disabled={loading || pendingVerification}
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -214,34 +173,10 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
+                      <PasswordInput
                         placeholder="Enter password"
                         autoComplete="new-password"
-                        disabled={loading || pendingVerification}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      At least 8 characters
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Confirm password"
-                        autoComplete="new-password"
-                        disabled={loading || pendingVerification}
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -251,42 +186,16 @@ export default function SignUpPage() {
               />
 
               {/* Clerk CAPTCHA - Only shows when suspicious activity is detected */}
-              {!pendingVerification && <div id="clerk-captcha" />}
-
-              {pendingVerification && (
-                <FormField
-                  control={form.control}
-                  name="code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Verification Code</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          placeholder="Enter 6-digit code"
-                          autoComplete="one-time-code"
-                          maxLength={6}
-                          disabled={loading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Check your email for the verification code
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              <div id="clerk-captcha" />
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {pendingVerification ? 'Verifying...' : 'Creating Account...'}
+                    Creating Account...
                   </>
                 ) : (
-                  pendingVerification ? 'Verify Email' : 'Sign Up'
+                  'Sign Up'
                 )}
               </Button>
             </form>
