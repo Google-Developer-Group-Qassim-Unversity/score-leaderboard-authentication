@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react'
 import { useSignUp } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useForm } from 'react-hook-form'
+import { set, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
@@ -81,9 +81,18 @@ function SignUpContent() {
       // Set 'pendingVerification' true to display verification view
       setPendingVerification(true)
     } catch (err: any) {
-      // See https://clerk.com/docs/guides/development/custom-flows/error-handling
+
       console.error('Sign-up error:', JSON.stringify(err, null, 2))
-      setError(err.errors?.[0]?.message || 'An error occurred during sign-up')
+      if (err.clerkError) {
+        console.log('got Clerk error code:', err.code)
+        if (err?.errors[0]?.message.includes('That email address is taken')) {
+          setError('An account associated with this email already exists. Please sign in instead.')
+          return
+        }
+        setError(err.errors?.[0]?.message)
+      } else {
+        setError('An unexpected error occurred. Please try again. or contact support.')
+      }
     } finally {
       setLoading(false)
     }

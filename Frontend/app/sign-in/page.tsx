@@ -132,10 +132,14 @@ function SignInContent() {
           return
         }
 
+        console.log('Second factor required sending code to:', emailAddress)
+        let start = performance.now()
         await signIn.prepareSecondFactor({
           strategy: 'email_code',
           emailAddressId: emailAddressId,
         })
+        let end = performance.now()
+        console.log(`code sent, took ${(end - start).toFixed(2)} ms`)
         setNeedsSecondFactor(true)
       } else {
         setError('Unable to complete sign in.')

@@ -25,6 +25,7 @@ export function VerificationCard({
   const { signUp } = useSignUp()
   const { signIn } = useSignIn()
   const [verificationCode, setVerificationCode] = React.useState('')
+  const [codeError, setCodeError] = React.useState(false)
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
   const [resendCooldown, setResendCooldown] = React.useState(RESEND_COOLDOWN_SECONDS)
@@ -63,12 +64,16 @@ export function VerificationCard({
           setError('Sign up session not found')
           return
         }
+        
+        console.log('Resending sign-up verification code to:', email)
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       } else {
         if (!signIn) {
           setError('Sign in session not found')
           return
         }
+
+        console.log('Resending sign-in second factor verification code to:', email)
         await signIn.prepareSecondFactor({ strategy: 'email_code' })
       }
       // Reset cooldown after successful resend
@@ -129,8 +134,16 @@ export function VerificationCard({
         }
       }
     } catch (err: any) {
-      console.error('Verification error:', err)
-      setError(err.errors?.[0]?.message || err.errors?.[0]?.longMessage || 'Invalid verification code')
+      console.error('verification error:', JSON.stringify(err, null, 2))
+      if (err.clerkError) {
+        console.log('got Clerk error code:', err.code)
+        if (err?.errors[0]?.code.includes('form_code_incorrect')) {
+          setError(err.errors?.[0]?.longMessage)
+          setCodeError(true)
+          return
+        }
+      }
+      setError('An unexpected error occurred. Please try again. or contact support.')
     } finally {
       setLoading(false)
     }
@@ -139,6 +152,7 @@ export function VerificationCard({
   const handleBack = () => {
     setVerificationCode('')
     setError('')
+    setCodeError(false)
     onBack()
   }
 
@@ -173,11 +187,12 @@ export function VerificationCard({
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '')
                   setVerificationCode(value)
+                  setCodeError(false)
                 }}
                 disabled={loading}
                 maxLength={6}
                 autoComplete="one-time-code"
-                className="text-center text-lg tracking-widest font-mono"
+                className={`text-center text-lg tracking-widest font-mono ${codeError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               />
               <div className="flex justify-center pt-1">
                 {canResend ? (

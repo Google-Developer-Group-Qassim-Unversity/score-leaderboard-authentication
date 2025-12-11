@@ -70,6 +70,7 @@ function ForgotPasswordContent() {
   
   // Verification code state
   const [verificationCode, setVerificationCode] = React.useState('')
+  const [codeError, setCodeError] = React.useState(false)
   const [resendCooldown, setResendCooldown] = React.useState(0)
   const [resending, setResending] = React.useState(false)
 
@@ -199,13 +200,17 @@ function ForgotPasswordContent() {
         setError('Unable to reset password. Please try again.')
       }
     } catch (err: any) {
-      console.error('Password reset error:', err)
-      if (err.errors?.[0]?.code === 'form_code_incorrect') {
-        setError('Invalid verification code. Please try again.')
-        setStep('verification')
-      } else {
-        setError(err.errors?.[0]?.longMessage || 'An unexpected error occurred.')
+      console.error('Password reset error:', JSON.stringify(err, null, 2))
+      if (err.clerkError) {
+        console.log('got Clerk error code:', err.code)
+        if (err?.errors[0]?.code.includes('form_code_incorrect')) {
+          setError(err.errors?.[0]?.longMessage)
+          setCodeError(true)
+          setStep('verification')
+          return
+        }
       }
+      setError(err.errors?.[0]?.longMessage || 'An unexpected error occurred. Please try again or contact support.')
     } finally {
       setLoading(false)
     }
@@ -341,11 +346,12 @@ function ForgotPasswordContent() {
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '')
                     setVerificationCode(value)
+                    setCodeError(false)
                   }}
                   disabled={loading}
                   maxLength={6}
                   autoComplete="one-time-code"
-                  className="text-center text-lg tracking-widest font-mono"
+                  className={`text-center text-lg tracking-widest font-mono ${codeError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
                 <div className="flex justify-center pt-1">
                   {canResend ? (
