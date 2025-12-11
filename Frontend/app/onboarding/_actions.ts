@@ -2,15 +2,7 @@
 
 import { auth, clerkClient } from '@clerk/nextjs/server'
 
-export interface OnboardingFormData {
-  uni_id: string
-  fullArabicName: string
-  saudiPhone: string
-  gender: 'Male' | 'Female'
-  personalEmail: string
-}
-
-export const completeOnboarding = async (formData: OnboardingFormData) => {
+export async function updateUserMetadata(metadata: Record<string, unknown>) {
   const { isAuthenticated, userId } = await auth()
 
   if (!isAuthenticated || !userId) {
@@ -19,20 +11,22 @@ export const completeOnboarding = async (formData: OnboardingFormData) => {
 
   const client = await clerkClient()
   
-  // Update Clerk metadata (JWT will be refreshed on client side)
+  // Update Clerk public metadata
   try {
     await client.users.updateUser(userId, {
-      publicMetadata: {
-        onboardingComplete: true,
-        uni_id: formData.uni_id,
-        fullArabicName: formData.fullArabicName,
-        saudiPhone: formData.saudiPhone,
-        gender: formData.gender,
-        personalEmail: formData.personalEmail,
-      },
+      publicMetadata: metadata,
     })
+
+
+    if (process.env.NODE_ENV === 'development') {
+      const user = await client.users.getUser(userId);
+      const metadata = user.publicMetadata;
+      console.log('✅ Successfully updated user metadata:', metadata)
+    }
+
     return { success: true }
   } catch (err) {
-    return { error: 'There was an error updating the user metadata.' }
+    console.error('Error updating user metadata:', err)
+    return { error: 'There was an error updating you data, please try again later' }
   }
 }

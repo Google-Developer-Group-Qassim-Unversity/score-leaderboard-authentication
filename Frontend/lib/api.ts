@@ -1,5 +1,6 @@
 // API utility functions for fetching data from the backend
-
+'use server'
+import { auth } from '@clerk/nextjs/server'
 import type {
   ApiMember,
   ApiMembersResponse,
@@ -193,7 +194,15 @@ export async function fetchEventForm(eventId: number): Promise<ApiEventForm | nu
   }
 }
 
-export async function createMember(token: string): Promise<CreateMemberResponse | null> {
+export async function createMember(): Promise<CreateMemberResponse | null> {
+  const { getToken } = await auth()
+  const token = await getToken()
+  
+  if (!token) {
+    console.error('❌ Failed to retrieve auth token')
+    return null
+  }
+
   try {
     console.log(`🔍 Creating member from JWT token...`)
     
@@ -211,7 +220,7 @@ export async function createMember(token: string): Promise<CreateMemberResponse 
     }
 
     const data: CreateMemberResponse = await response.json()
-    console.log(`✅ Successfully created member ${data.id} (already_exists: ${data.already_exists})`)
+    console.log(`✅ Successfully created member ${data.member.id}\n${JSON.stringify(data)}`)
     return data
 
   } catch (error) {
