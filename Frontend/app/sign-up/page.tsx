@@ -17,14 +17,11 @@ import { VerificationCard } from '@/components/verification-card'
 import { AlertCircle, Loader2 } from 'lucide-react'
 
 const signUpSchema = z.object({
-  emailAddress: z
+  universityId: z
     .string()
-    .min(1, 'Email is required')
-    .email('Invalid email address')
-    .refine(
-      (email) => email.endsWith('@qu.edu.sa'),
-      { message: 'Must be a valid @qu.edu.sa email address' }
-    ),
+    .min(9, 'University ID must be 9 digits')
+    .max(9, 'University ID must be 9 digits')
+    .regex(/^\d{9}$/, 'University ID must be exactly 9 digits'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters'),
@@ -55,7 +52,7 @@ function SignUpContent() {
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      emailAddress: '',
+      universityId: '',
       password: '',
     },
   })
@@ -67,10 +64,12 @@ function SignUpContent() {
     setError('')
     setLoading(true)
 
+    const emailAddress = `${data.universityId}@qu.edu.sa`
+
     try {
       // Start the sign-up process using the email and password provided
       await signUp.create({
-        emailAddress: data.emailAddress,
+        emailAddress: emailAddress,
         password: data.password,
       })
 
@@ -157,22 +156,27 @@ function SignUpContent() {
             <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-4" autoComplete="on">
               <FormField
                 control={form.control}
-                name="emailAddress"
-                render={({ field }) => (
+                name="universityId"
+                render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel>University ID</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="442106350@qu.edu.sa"
-                        autoComplete="email"
-                        disabled={loading}
-                        {...field}
-                      />
+                      <div className={`flex items-center rounded-md border ${fieldState.error ? 'border-destructive' : 'border-input'} focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2`}>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="442106350"
+                          autoComplete="username"
+                          maxLength={9}
+                          className="border-0 rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          disabled={loading}
+                          {...field}
+                        />
+                        <span className="inline-flex items-center px-3 h-10 bg-background text-muted-foreground text-sm border-l border-input rounded-r-md">
+                          @qu.edu.sa
+                        </span>
+                      </div>
                     </FormControl>
-                    <FormDescription>
-                      Must be a valid @qu.edu.sa email address
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

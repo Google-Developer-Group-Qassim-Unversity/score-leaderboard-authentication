@@ -26,7 +26,10 @@ import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { VerificationCard } from '@/components/verification-card'
 
 const signInSchema = z.object({
-  emailAddress: z.string().email('Invalid email address'),
+  universityId: z.string()
+    .min(9, 'University ID must be 9 digits')
+    .max(9, 'University ID must be 9 digits')
+    .regex(/^\d{9}$/, 'University ID must be exactly 9 digits'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -57,7 +60,7 @@ function SignInContent() {
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      emailAddress: '',
+      universityId: '',
       password: '',
     },
   })
@@ -103,9 +106,11 @@ function SignInContent() {
     if (!isLoaded) return
     setLoading(true)
 
+    const emailAddress = `${data.universityId}@qu.edu.sa`
+
     try {
       const result = await signIn.create({
-        identifier: data.emailAddress,
+        identifier: emailAddress,
         password: data.password,
       })
 
@@ -192,20 +197,29 @@ function SignInContent() {
           )}
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" autoComplete="on">
               <FormField
                 control={form.control}
-                name="emailAddress"
-                render={({ field }) => (
+                name="universityId"
+                render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>University Email Address</FormLabel>
+                    <FormLabel>University ID</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="442106350@qu.edu.sa"
-                        {...field}
-                        disabled={loading}
-                      />
+                      <div className={`flex items-center rounded-md border ${fieldState.error ? 'border-destructive' : 'border-input'} focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2`}>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="442106350"
+                          autoComplete="username"
+                          maxLength={9}
+                          className="border-0 rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          {...field}
+                          disabled={loading}
+                        />
+                        <span className="inline-flex items-center px-3 h-10 bg-background text-muted-foreground text-sm border-l border-input rounded-r-md">
+                          @qu.edu.sa
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -221,6 +235,7 @@ function SignInContent() {
                     <FormControl>
                       <PasswordInput
                         placeholder="Enter password"
+                        autoComplete="current-password"
                         {...field}
                         disabled={loading}
                       />
