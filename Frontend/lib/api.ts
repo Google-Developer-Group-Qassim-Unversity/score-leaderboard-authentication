@@ -1,7 +1,7 @@
 // API utility functions for auth
 'use server'
 import { auth } from '@clerk/nextjs/server'
-const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST || "http://178.128.205.239:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST
 
 export interface CreateMemberResponse {
   member: {
