@@ -17,8 +17,8 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
-          <link rel="icon" href="/favicon.png" type="image/png"/>
-          <link rel="manifest" href="/manifest.json" />
+          <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+          <link rel="manifest" href="site.webmanifest" />
         </head>
         <body className="font-sans">
           {children}

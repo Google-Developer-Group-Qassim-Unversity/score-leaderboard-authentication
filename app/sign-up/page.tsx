@@ -145,6 +145,14 @@ function SignUpContent() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader>
+          <div className="flex justify-center mb-4">
+            <img
+              src="/GDG.svg"
+              alt="GDG Logo"
+              width={100}
+              height={100}
+            />
+          </div>
           <CardTitle className="text-2xl font-bold text-center">
             Create Account
           </CardTitle>
