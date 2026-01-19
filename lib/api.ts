@@ -11,6 +11,8 @@ export interface CreateMemberResponse {
     phone_number: string
     uni_id: number
     gender: "Male" | "Female"
+    uni_level: number
+    uni_college: string
   }
   already_exists: boolean
 }
