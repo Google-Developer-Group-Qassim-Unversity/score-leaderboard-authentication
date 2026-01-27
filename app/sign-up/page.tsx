@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { VerificationCard } from '@/components/verification-card'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2, UserPlus } from 'lucide-react'
 
 const signUpSchema = z.object({
   universityId: z
@@ -143,7 +143,7 @@ function SignUpContent() {
   // Show sign-up form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-t-4 border-t-green-600">
         <CardHeader>
           <div className="flex justify-center mb-4">
             <img
@@ -152,6 +152,11 @@ function SignUpContent() {
               width={100}
               height={100}
             />
+          </div>
+          <div className="flex justify-center mb-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              New Account
+            </span>
           </div>
           <CardTitle className="text-2xl font-bold text-center">
             Create Account
@@ -221,14 +226,17 @@ function SignUpContent() {
               {/* Clerk CAPTCHA - Only shows when suspicious activity is detected */}
               <div id="clerk-captcha" />
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating Account...
                   </>
                 ) : (
-                  'Sign Up'
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create Account
+                  </>
                 )}
               </Button>
             </form>
