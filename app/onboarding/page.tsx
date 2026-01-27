@@ -9,7 +9,7 @@ import { AlertCircle } from 'lucide-react'
 import { updateUserMetadata} from './_actions'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { UserAccountCard } from '@/components/user-account-card'
-import { createMember } from '@/lib/api'
+import { createMember, API_BASE_URL } from '@/lib/api'
 import { OnboardingForm, type OnboardingFormValues } from '@/components/onboarding-form'
 
 export default function OnboardingPage() {
@@ -47,6 +47,13 @@ export default function OnboardingPage() {
         const memberCreated = await createMember()
         if (!memberCreated) {
           console.log('⚠️ Skipping member creation in backend!')
+          console.log(`request was made to: ${API_BASE_URL}/members`)
+          console.log(`member data: ${user?.publicMetadata.fullArabicName}`)
+          console.log(`member data: ${user?.publicMetadata.saudiPhone}`)
+          console.log(`member data: ${user?.publicMetadata.gender}`)
+          console.log(`member data: ${user?.publicMetadata.uniLevel}`)
+          console.log(`member data: ${user?.publicMetadata.uniCollege}`)
+          console.log(`member data: ${user?.publicMetadata.personalEmail}`)
         }
 
         // Step 4: Handle redirect

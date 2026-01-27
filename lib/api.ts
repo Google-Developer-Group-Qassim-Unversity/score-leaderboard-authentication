@@ -1,7 +1,7 @@
 // API utility functions for auth
 'use server'
 import { auth } from '@clerk/nextjs/server'
-const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST
+export const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST
 
 export interface CreateMemberResponse {
   member: {
@@ -22,12 +22,12 @@ export async function createMember(): Promise<CreateMemberResponse | null> {
   const token = await getToken()
   
   if (!token) {
-    console.error('❌ Failed to retrieve auth token')
+    console.error('[createMember] ❌ Failed to retrieve auth token')
     return null
   }
 
   try {
-    console.log(`🔍 Creating member from JWT token...`)
+    console.log(`[createMember] 🔍 Creating member from JWT token...`)
     
     const response = await fetch(`${API_BASE_URL}/members`, {
       method: "POST",
@@ -38,7 +38,7 @@ export async function createMember(): Promise<CreateMemberResponse | null> {
     })
 
     if (!response.ok) {
-      console.warn(`⚠️ Skipping member creation ${response.status}: ${response.statusText}`)
+      console.warn(`[createMember] ⚠️ Skipping member creation ${response.status}: ${response.statusText}`)
       return null
     }
 
