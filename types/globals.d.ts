@@ -9,6 +9,8 @@ declare global {
       saudiPhone?: string
       gender?: 'male' | 'female'
       personalEmail?: string
+      uniLevel?: number
+      uniCollege?: string
     }
   }
 }

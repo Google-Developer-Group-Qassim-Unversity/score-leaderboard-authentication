@@ -10,6 +10,7 @@ import { updateUserMetadata} from './_actions'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { UserAccountCard } from '@/components/user-account-card'
 import { createMember } from '@/lib/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST
 import { OnboardingForm, type OnboardingFormValues } from '@/components/onboarding-form'
 
 export default function OnboardingPage() {
@@ -47,6 +48,13 @@ export default function OnboardingPage() {
         const memberCreated = await createMember()
         if (!memberCreated) {
           console.log('⚠️ Skipping member creation in backend!')
+          console.log(`request was made to: ${process.env.NEXT_PUBLIC_HOST}/members`)
+          console.log(`member data: ${user?.publicMetadata.fullArabicName}`)
+          console.log(`member data: ${user?.publicMetadata.saudiPhone}`)
+          console.log(`member data: ${user?.publicMetadata.gender}`)
+          console.log(`member data: ${user?.publicMetadata.uniLevel}`)
+          console.log(`member data: ${user?.publicMetadata.uniCollege}`)
+          console.log(`member data: ${user?.publicMetadata.personalEmail}`)
         }
 
         // Step 4: Handle redirect

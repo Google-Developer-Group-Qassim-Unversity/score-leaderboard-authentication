@@ -6,6 +6,7 @@
 export const ALLOWED_REDIRECT_DOMAINS = [
   // Local development
   'localhost',
+  'gdg-q.com',
   
   // Production domains (without protocol)
   'event.gdg-q.com',
