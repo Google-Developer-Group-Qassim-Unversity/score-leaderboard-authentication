@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useState, Suspense } from 'react'
 import { useSignUp } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -14,6 +15,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { VerificationCard } from '@/components/verification-card'
+import { saveRedirectUrl } from '@/lib/redirect-storage'
 import { AlertCircle, Loader2, UserPlus } from 'lucide-react'
 
 const signUpSchema = z.object({
@@ -56,6 +58,14 @@ function SignUpContent() {
       password: '',
     },
   })
+
+  // Capture redirect_url from URL and save to localStorage
+  React.useEffect(() => {
+    const redirectUrl = searchParams.get('redirect_url')
+    if (redirectUrl) {
+      saveRedirectUrl(redirectUrl)
+    }
+  }, [searchParams])
 
   // Handle submission of the sign-up form
   const handleSignUp = async (data: SignUpFormValues) => {
@@ -111,12 +121,7 @@ function SignUpContent() {
           return
         }
 
-        const redirectUrl = searchParams.get('redirect_url')
-        if (redirectUrl) {
-          router.push(`/onboarding?redirect_url=${encodeURIComponent(redirectUrl)}`)
-        } else {
-          router.push('/onboarding')
-        }
+        router.push('/onboarding')
       },
     })
   }
@@ -247,10 +252,7 @@ function SignUpContent() {
           <div className="text-sm text-center text-muted-foreground">
             Already have an account?{' '}
             <Link 
-              href={searchParams.get('redirect_url') 
-                ? `/sign-in?redirect_url=${encodeURIComponent(searchParams.get('redirect_url')!)}` 
-                : '/sign-in'
-              } 
+              href="/sign-in" 
               className="text-primary hover:underline"
             >
               Sign In

@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import {
   Form,
   FormControl,
@@ -193,6 +194,7 @@ function ForgotPasswordContent() {
         // Password reset successful - set active session and redirect
         if (setActive && result.createdSessionId) {
           await setActive({ session: result.createdSessionId })
+          // Navigate to user-profile, let middleware handle redirect from localStorage
           router.push('/user-profile')
         }
       } else {

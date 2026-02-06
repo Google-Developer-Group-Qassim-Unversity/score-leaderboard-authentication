@@ -23,6 +23,7 @@ import {
 import { AlertCircle, Loader2, UserPlus  } from 'lucide-react'
 import Link from 'next/link'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
+import { saveRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import { VerificationCard } from '@/components/verification-card'
 
 const signInSchema = z.object({
@@ -65,17 +66,28 @@ function SignInContent() {
     },
   })
 
+  // Capture redirect_url from URL and save to localStorage
+  React.useEffect(() => {
+    console.log('Checking for redirect_url in search params...')
+    const redirectUrl = searchParams.get('redirect_url')
+    if (redirectUrl) {
+      console.log('Found redirect_url:', redirectUrl)
+      saveRedirectUrl(redirectUrl)
+    }
+    console.log('Current search params:', Array.from(searchParams.entries()))
+  }, [searchParams])
+
   // Auto-redirect if already signed in
   React.useEffect(() => {
     if (isLoaded && isSignedIn) {
-      const redirectUrl = searchParams.get('redirect_url')
+      const redirectUrl = getValidatedRedirectUrl()
       if (redirectUrl) {
          window.location.href = redirectUrl
       } else {
          router.push('/user-profile')
       }
     }
-  }, [isLoaded, isSignedIn, searchParams, router])
+  }, [isLoaded, isSignedIn, router])
 
   const handleComplete = async (sessionId: string) => {
     // FIX 1: Guard clause for setActive
@@ -85,16 +97,8 @@ function SignInContent() {
 
     try {
       await setActive({ session: sessionId })
-      
-      const redirectUrl = searchParams.get('redirect_url')
-      console.log("Attempting redirect to:", redirectUrl);
-      
-      if (redirectUrl && isAllowedRedirectUrl(redirectUrl)) {
-        window.location.href = redirectUrl
-      } else {
-        if (redirectUrl) console.warn("Redirect URL blocked by AllowList:", redirectUrl);
-        router.push('/user-profile')
-      }
+      // Let the auto-redirect useEffect handle navigation
+      // This prevents flash by showing loading state during re-render
     } catch (err) {
       console.error("Error setting active session:", err);
       window.location.reload();
@@ -280,10 +284,7 @@ function SignInContent() {
           <div className="text-sm text-center text-muted-foreground">
             Don't have an account?{' '}
             <Link 
-              href={searchParams.get('redirect_url') 
-                ? `/sign-up?redirect_url=${encodeURIComponent(searchParams.get('redirect_url')!)}` 
-                : '/sign-up'
-              } 
+              href="/sign-up" 
               className="text-primary hover:underline"
             >
               Sign Up

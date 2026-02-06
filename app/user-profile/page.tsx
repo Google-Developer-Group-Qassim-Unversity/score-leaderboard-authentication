@@ -5,13 +5,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { clearRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
+import * as React from 'react'
 
 export default function SignedInPage() {
   const { user, isLoaded } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
+  
+  // Check for redirect URL synchronously on first render
+  const [redirectUrl] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return getValidatedRedirectUrl()
+    }
+    return null
+  })
 
-  if (!isLoaded) {
+  // Perform redirect in useEffect
+  React.useEffect(() => {
+    if (redirectUrl) {
+      console.log('Redirecting to:', redirectUrl)
+      window.location.href = redirectUrl
+    }
+  }, [redirectUrl])
+
+  // Show loading spinner while user loads or while redirecting
+  if (!isLoaded || redirectUrl) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -23,6 +42,7 @@ export default function SignedInPage() {
   const fullArabicName = user?.publicMetadata?.fullArabicName as string | undefined
 
   const handleSignOut = async () => {
+    clearRedirectUrl()
     await signOut()
     router.push('/sign-in')
   }

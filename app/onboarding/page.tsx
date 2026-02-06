@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { updateUserMetadata} from './_actions'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
+import { saveRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import { UserAccountCard } from '@/components/user-account-card'
 import { createMember } from '@/lib/api'
 const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST
@@ -27,6 +28,14 @@ export default function OnboardingPage() {
   }
 
   const uniId = extractUniIdFromEmail(user?.primaryEmailAddress?.emailAddress)
+
+  // Capture redirect_url from URL and save to localStorage
+  React.useEffect(() => {
+    const redirectUrl = searchParams.get('redirect_url')
+    if (redirectUrl) {
+      saveRedirectUrl(redirectUrl)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (data: OnboardingFormValues) => {
     setError('')
@@ -57,16 +66,10 @@ export default function OnboardingPage() {
           console.log(`member data: ${user?.publicMetadata.personalEmail}`)
         }
 
-        // Step 4: Handle redirect
-        const redirectUrl = searchParams.get('redirect_url')
-        if (redirectUrl && isAllowedRedirectUrl(redirectUrl)) {
-          window.location.href = redirectUrl
-          return
-        }
-        
-        // Default redirect to home page
+        // Step 3: Trigger navigation to let middleware handle redirect
+        // Middleware will read redirect_url from localStorage and redirect appropriately
         router.push('/user-profile')
-        console.log('✅ Onboarding complete, redirected to user-profile')
+        console.log('✅ Onboarding complete, navigating to user-profile')
       } else {
         setError('Unexpected response from server. Please try again.')
       }
