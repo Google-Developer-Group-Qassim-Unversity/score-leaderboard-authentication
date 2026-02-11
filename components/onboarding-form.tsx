@@ -187,7 +187,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="saudiPhone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir="rtl">رقم الجول</FormLabel>
+              <FormLabel dir="rtl">رقم الجوال</FormLabel>
               <FormControl>
                 <Input
                   placeholder="05xxxxxxxx"
@@ -329,7 +329,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="your.email@gmail.com"
+                  placeholder="example@example.com"
                   {...field}
                   disabled={isSubmitting}
                   dir="ltr"
