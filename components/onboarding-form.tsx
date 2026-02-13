@@ -170,7 +170,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
               <FormLabel dir="rtl">الاسم الرباعي</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="ابراهيم عبدالاله علي الحربي"
+                  placeholder="مثال:ابراهيم محمد بسام الحربي"
                   {...field}
                   disabled={isSubmitting}
                   dir="rtl"

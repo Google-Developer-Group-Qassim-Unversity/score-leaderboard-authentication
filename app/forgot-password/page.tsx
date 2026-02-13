@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
+import { AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 
 const RESEND_COOLDOWN_SECONDS = 60
@@ -382,6 +382,17 @@ function ForgotPasswordContent() {
                       Resend code in {resendCooldown}s
                     </span>
                   )}
+                </div>
+                <div className="flex justify-center pt-2">
+                  <a
+                    href="https://outlook.office.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <span>Go to Outlook</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
                 </div>
               </div>
               

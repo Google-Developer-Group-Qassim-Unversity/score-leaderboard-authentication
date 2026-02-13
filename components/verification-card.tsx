@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
+import { AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -221,6 +221,17 @@ export function VerificationCard({
                     Resend code in {resendCooldown}s
                   </span>
                 )}
+              </div>
+              <div className="flex justify-center pt-2">
+                <a
+                  href="https://outlook.office.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <span>Go to Outlook</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
             </div>
             <div className="flex flex-col gap-2 mt-4">
