@@ -2,8 +2,8 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
 // Define allowed routes
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/forgot-password(.*)', '/sentry-example-page'])
 const isOnboardingRoute = createRouteMatcher(['/onboarding'])
-const isAuthRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/forgot-password(.*)'])
 const isUserProfileRoute = createRouteMatcher(['/user-profile'])
 const isRootRoute = createRouteMatcher(['/'])
 
@@ -26,8 +26,8 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL('/user-profile', req.url))
   }
 
-  // Allow auth routes for everyone
-  if (isAuthRoute(req)) {
+  // Allow public routes for everyone
+  if (isPublicRoute(req)) {
     return NextResponse.next()
   }
 
