@@ -11,6 +11,8 @@ import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { saveRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import { UserAccountCard } from '@/components/user-account-card'
 import { createMember } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n/client'
+import { LanguageSwitcher } from '@/components/language-switcher'
 const API_BASE_URL = process.env.NEXT_PUBLIC_DEV_HOST || process.env.NEXT_PUBLIC_HOST
 import { OnboardingForm, type OnboardingFormValues } from '@/components/onboarding-form'
 
@@ -19,6 +21,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = React.useState('')
+  const { t } = useTranslation()
 
   // Extract uni_id from user's email
   const extractUniIdFromEmail = (email: string | undefined): string => {
@@ -80,14 +83,17 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-2xl">
         <CardHeader>
           {/* Clerk User Button for account management */}
           <UserAccountCard />
           
-          <CardTitle className="text-2xl font-bold">Complete Your Profile</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('onboarding.title')}</CardTitle>
           <CardDescription>
-            Please provide the following information to complete your registration
+            {t('onboarding.description')}
           </CardDescription>
         </CardHeader>
 

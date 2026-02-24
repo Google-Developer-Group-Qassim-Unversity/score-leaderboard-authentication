@@ -128,6 +128,47 @@ export const resources = {
       "validation.password.required": "Password is required",
       "validation.password.minLength": "Password must be at least 8 characters",
       "validation.verificationCode.invalid": "Please enter a valid 6-digit verification code",
+      
+      // Onboarding Page
+      "onboarding.title": "Complete Your Profile",
+      "onboarding.description": "Please provide the following information to complete your registration",
+      
+      // Onboarding Form Fields
+      "onboarding.uniId.label": "University ID",
+      "onboarding.uniId.autoFilled": "Auto-filled",
+      "onboarding.fullName.label": "Full Name",
+      "onboarding.fullName.placeholder": "Example: Ibrahim Mohammed Bassam Al-Harbi",
+      "onboarding.phone.label": "Phone Number",
+      "onboarding.phone.placeholder": "05xxxxxxxx",
+      "onboarding.gender.label": "Section",
+      "onboarding.gender.male": "Male Students",
+      "onboarding.gender.female": "Female Students",
+      "onboarding.level.label": "Academic Level",
+      "onboarding.level.placeholder": "Choose level",
+      "onboarding.college.label": "College",
+      "onboarding.college.placeholder": "Choose college",
+      "onboarding.college.other": "Other",
+      "onboarding.collegeOther.label": "College Name",
+      "onboarding.collegeOther.placeholder": "Enter your college name",
+      "onboarding.email.label": "Personal Email",
+      "onboarding.email.placeholder": "example@example.com",
+      "onboarding.email.description": "Personal email, not ending with @qu.edu.sa",
+      "onboarding.submit": "Complete Registration",
+      "onboarding.submitting": "Completing Registration...",
+      
+      // Onboarding Validation Messages
+      "onboarding.validation.fullName.required": "Full Arabic name is required",
+      "onboarding.validation.fullName.arabicOnly": "Name must be in Arabic characters only",
+      "onboarding.validation.phone.length": "Phone number must be exactly 10 digits",
+      "onboarding.validation.phone.format": "Phone number must start with 05 followed by 8 digits",
+      "onboarding.validation.gender.required": "Please select a gender",
+      "onboarding.validation.level.required": "Please select your level",
+      "onboarding.validation.level.min": "Level must be between 1 and 10",
+      "onboarding.validation.level.max": "Level must be between 1 and 10",
+      "onboarding.validation.college.required": "Please select your college",
+      "onboarding.validation.collegeOther.required": "Please enter your college name",
+      "onboarding.validation.email.invalid": "Invalid email address",
+      "onboarding.validation.email.notQuEmail": "Personal email cannot be a @qu.edu.sa address",
     }
   },
   ar: {
@@ -257,6 +298,47 @@ export const resources = {
       "validation.password.required": "كلمة المرور مطلوبة",
       "validation.password.minLength": "كلمة المرور لازم تكون 8 أحرف على الأقل",
       "validation.verificationCode.invalid": "أدخل رمز تحقق صحيح مكون من 6 أرقام",
+      
+      // Onboarding Page (Saudi Arabic)
+      "onboarding.title": "أكمل بياناتك",
+      "onboarding.description": "يرجى تعبئة المعلومات التالية لإكمال تسجيلك",
+      
+      // Onboarding Form Fields (Saudi Arabic)
+      "onboarding.uniId.label": "الرقم الجامعي",
+      "onboarding.uniId.autoFilled": "تم التعبئة تلقائياً",
+      "onboarding.fullName.label": "الاسم الرباعي",
+      "onboarding.fullName.placeholder": "مثال: ابراهيم محمد بسام الحربي",
+      "onboarding.phone.label": "رقم الجوال",
+      "onboarding.phone.placeholder": "05xxxxxxxx",
+      "onboarding.gender.label": "القسم",
+      "onboarding.gender.male": "طلاب",
+      "onboarding.gender.female": "طالبات",
+      "onboarding.level.label": "المستوى الدراسي",
+      "onboarding.level.placeholder": "اختر المستوى",
+      "onboarding.college.label": "الكلية",
+      "onboarding.college.placeholder": "اختر الكلية",
+      "onboarding.college.other": "أخرى",
+      "onboarding.collegeOther.label": "اسم الكلية",
+      "onboarding.collegeOther.placeholder": "أدخل اسم كليتك",
+      "onboarding.email.label": "البريد الشخصي",
+      "onboarding.email.placeholder": "example@example.com",
+      "onboarding.email.description": "البريد الشخصي وليس المنتهي بـ qu.edu.sa@",
+      "onboarding.submit": "إكمال التسجيل",
+      "onboarding.submitting": "جاري إكمال التسجيل...",
+      
+      // Onboarding Validation Messages (Saudi Arabic)
+      "onboarding.validation.fullName.required": "الاسم الرباعي مطلوب",
+      "onboarding.validation.fullName.arabicOnly": "الاسم لازم يكون بالحروف العربية فقط",
+      "onboarding.validation.phone.length": "رقم الجوال لازم يكون 10 أرقام بالضبط",
+      "onboarding.validation.phone.format": "رقم الجوال لازم يبدأ بـ 05 متبوعاً بـ 8 أرقام",
+      "onboarding.validation.gender.required": "يرجى اختيار القسم",
+      "onboarding.validation.level.required": "يرجى اختيار مستواك الدراسي",
+      "onboarding.validation.level.min": "المستوى لازم يكون بين 1 و 10",
+      "onboarding.validation.level.max": "المستوى لازم يكون بين 1 و 10",
+      "onboarding.validation.college.required": "يرجى اختيار الكلية",
+      "onboarding.validation.collegeOther.required": "يرجى إدخال اسم كليتك",
+      "onboarding.validation.email.invalid": "البريد الإلكتروني غير صحيح",
+      "onboarding.validation.email.notQuEmail": "البريد الشخصي ما يقدر يكون بنطاق qu.edu.sa@",
     }
   }
 } as const;

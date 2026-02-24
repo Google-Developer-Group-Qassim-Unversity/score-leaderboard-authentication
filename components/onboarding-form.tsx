@@ -22,36 +22,37 @@ import {
 } from '@/components/ui/form'
 import { Loader2, Lock } from 'lucide-react'
 import { QU_COLLEGES, UNI_LEVELS } from '@/lib/constants'
+import { useTranslation, useLanguage } from '@/lib/i18n/client'
 
 // Form validation schema
-const onboardingSchema = z.object({
+const createOnboardingSchema = (t: (key: string) => string) => z.object({
   uni_id: z.string(), // No validation needed - extracted from email
   fullArabicName: z
     .string()
-    .min(1, 'Full Arabic name is required')
-    .regex(/^[\u0600-\u06FF\s]+$/, 'Name must be in Arabic characters only'),
+    .min(1, t('onboarding.validation.fullName.required'))
+    .regex(/^[\u0600-\u06FF\s]+$/, t('onboarding.validation.fullName.arabicOnly')),
   saudiPhone: z
     .string()
-    .length(10, 'Phone number must be exactly 10 digits')
-    .regex(/^05\d{8}$/, 'Phone number must start with 05 followed by 8 digits'),
-  gender: z.enum(['Male', 'Female'], { required_error: 'Please select a gender' }),
+    .length(10, t('onboarding.validation.phone.length'))
+    .regex(/^05\d{8}$/, t('onboarding.validation.phone.format')),
+  gender: z.enum(['Male', 'Female'], { required_error: t('onboarding.validation.gender.required') }),
   uniLevel: z
-    .number({ required_error: 'Please select your level' })
-    .min(1, 'Level must be between 1 and 10')
-    .max(10, 'Level must be between 1 and 10'),
+    .number({ required_error: t('onboarding.validation.level.required') })
+    .min(1, t('onboarding.validation.level.min'))
+    .max(10, t('onboarding.validation.level.max')),
   uniCollegeSelection: z
     .string()
-    .min(1, 'Please select your college'),
+    .min(1, t('onboarding.validation.college.required')),
   uniCollegeOther: z.string().optional(),
   personalEmail: z
     .string()
-    .email('Invalid email address')
+    .email(t('onboarding.validation.email.invalid'))
     .refine(
       (email) => {
         const domain = email.split('@')[1]
         return domain !== 'qu.edu.sa'
       },
-      { message: 'Personal email cannot be a @qu.edu.sa address' }
+      { message: t('onboarding.validation.email.notQuEmail') }
     ),
 }).refine(
   (data) => {
@@ -61,12 +62,13 @@ const onboardingSchema = z.object({
     return true
   },
   {
-    message: 'Please enter your college name',
+    message: t('onboarding.validation.collegeOther.required'),
     path: ['uniCollegeOther'],
   }
 )
 
-type FormValues = z.infer<typeof onboardingSchema>
+type OnboardingSchema = ReturnType<typeof createOnboardingSchema>
+type FormValues = z.infer<OnboardingSchema>
 
 // Transform form values to output values (with uni_college instead of selection/other)
 export interface OnboardingFormValues {
@@ -86,6 +88,11 @@ interface OnboardingFormProps {
 
 export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const { t } = useTranslation()
+  const { isRTL } = useLanguage()
+
+  // Create schema with current translations
+  const onboardingSchema = React.useMemo(() => createOnboardingSchema(t), [t])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardingSchema),
@@ -140,7 +147,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="uni_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir="rtl">الرقم الجامعي</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.uniId.label')}</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
@@ -152,7 +159,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded border">
                     <Lock className="h-3 w-3" />
-                    Auto-filled
+                    {t('onboarding.uniId.autoFilled')}
                   </div>
                 </div>
               </FormControl>
@@ -167,13 +174,13 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="fullArabicName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir="rtl">الاسم الرباعي</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.fullName.label')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="مثال:ابراهيم محمد بسام الحربي"
+                  placeholder={t('onboarding.fullName.placeholder')}
                   {...field}
                   disabled={isSubmitting}
-                  dir="rtl"
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
               </FormControl>
               <FormMessage />
@@ -187,10 +194,10 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="saudiPhone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir="rtl">رقم الجوال</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.phone.label')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="05xxxxxxxx"
+                  placeholder={t('onboarding.phone.placeholder')}
                   {...field}
                   maxLength={10}
                   disabled={isSubmitting}
@@ -208,10 +215,10 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="gender"
           render={({ field }) => (
             <FormItem className="space-y-3">
-              <FormLabel dir="rtl">القسم</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.gender.label')}</FormLabel>
               <FormControl>
                 <RadioGroup
-                  dir="rtl"
+                  dir={isRTL ? 'rtl' : 'ltr'}
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
@@ -221,16 +228,16 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
                     <FormControl>
                       <RadioGroupItem value="Male" />
                     </FormControl>
-                    <FormLabel className="font-normal cursor-pointer" dir="rtl">
-                      طلاب
+                    <FormLabel className="font-normal cursor-pointer" dir={isRTL ? 'rtl' : 'ltr'}>
+                      {t('onboarding.gender.male')}
                     </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
                       <RadioGroupItem value="Female" />
                     </FormControl>
-                    <FormLabel className="font-normal cursor-pointer" dir="rtl">
-                      طالبات
+                    <FormLabel className="font-normal cursor-pointer" dir={isRTL ? 'rtl' : 'ltr'}>
+                      {t('onboarding.gender.female')}
                     </FormLabel>
                   </FormItem>
                 </RadioGroup>
@@ -245,8 +252,8 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           control={form.control}
           name="uniLevel"
           render={({ field }) => (
-            <FormItem dir='rtl'>
-              <FormLabel >المستوى الدراسي</FormLabel>
+            <FormItem dir={isRTL ? 'rtl' : 'ltr'}>
+              <FormLabel>{t('onboarding.level.label')}</FormLabel>
               <FormControl>
                 <NativeSelect
                   {...field}
@@ -255,7 +262,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
                   disabled={isSubmitting}
                 >
                   <NativeSelectOption value="" disabled>
-                    اختر المستوى
+                    {t('onboarding.level.placeholder')}
                   </NativeSelectOption>
                   {UNI_LEVELS.map((level) => (
                     <NativeSelectOption key={level} value={level.toString()}>
@@ -274,22 +281,22 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           control={form.control}
           name="uniCollegeSelection"
           render={({ field }) => (
-            <FormItem dir='rtl'>
-              <FormLabel >الكلية</FormLabel>
+            <FormItem dir={isRTL ? 'rtl' : 'ltr'}>
+              <FormLabel>{t('onboarding.college.label')}</FormLabel>
               <FormControl>
                 <NativeSelect
                   {...field}
                   disabled={isSubmitting}
                 >
                   <NativeSelectOption value="" disabled>
-                    اختر الكلية
+                    {t('onboarding.college.placeholder')}
                   </NativeSelectOption>
                   {QU_COLLEGES.map((college) => (
                     <NativeSelectOption key={college} value={college}>
                       {college}
                     </NativeSelectOption>
                   ))}
-                  <NativeSelectOption value="other">أخرى</NativeSelectOption>
+                  <NativeSelectOption value="other">{t('onboarding.college.other')}</NativeSelectOption>
                 </NativeSelect>
               </FormControl>
               <FormMessage />
@@ -304,13 +311,13 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
             name="uniCollegeOther"
             render={({ field }) => (
               <FormItem>
-                <FormLabel dir="rtl">اسم الكلية</FormLabel>
+                <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.collegeOther.label')}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="أدخل اسم كليتك"
+                    placeholder={t('onboarding.collegeOther.placeholder')}
                     {...field}
                     disabled={isSubmitting}
-                    dir="rtl"
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 </FormControl>
                 <FormMessage />
@@ -325,18 +332,18 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="personalEmail"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir="rtl">البريد الشخصي</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.email.label')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="example@example.com"
+                  placeholder={t('onboarding.email.placeholder')}
                   {...field}
                   disabled={isSubmitting}
                   dir="ltr"
                 />
               </FormControl>
-              <FormDescription dir="rtl">
-                البريد الشخصي وليس المنتهي بـ qu.edu.sa@
+              <FormDescription dir={isRTL ? 'rtl' : 'ltr'}>
+                {t('onboarding.email.description')}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -347,10 +354,10 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Completing Registration...
+              {t('onboarding.submitting')}
             </>
           ) : (
-            'Complete Registration'
+            t('onboarding.submit')
           )}
         </Button>
       </form>

@@ -16,8 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="ar" dir="rtl">
+      <html lang="ar" dir="rtl" translate="no">
         <head>
+          <meta name="google" content="notranslate" />
           <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
           <link rel="manifest" href="site.webmanifest" />
         </head>
