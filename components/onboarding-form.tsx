@@ -24,6 +24,24 @@ import { Loader2, Lock } from 'lucide-react'
 import { QU_COLLEGES, UNI_LEVELS } from '@/lib/constants'
 import { useTranslation, useLanguage } from '@/lib/i18n/client'
 
+// College name translations (official names from Qassim University website)
+const COLLEGE_TRANSLATIONS: Record<string, string> = {
+  "كلية الحاسب": "College of Computer",
+  "كلية الطب": "College of Medicine",
+  "كلية طب الأسنان": "College of Dentistry",
+  "كلية الصيدلة": "College of Pharmacy",
+  "كلية الهندسة": "College of Engineering",
+  "كلية العلوم": "College of Science",
+  "كلية العمارة والتخطيط": "College of Architecture and Planning",
+  "كلية الزراعة والطب البيطري": "College of Agriculture and Food",
+  "كلية الشريعة والدراسات الإسلامية": "College of Shari'ah",
+  "كلية اللغة العربية والدراسات الاجتماعية": "College of Languages and Humanities",
+  "كلية الاقتصاد والإدارة": "College of Business and Economics",
+  "كلية العلوم الطبية التطبيقية": "College of Applied Medical Sciences",
+  "كلية التمريض": "College of Nursing",
+  "كلية التربية الدينية": "College of Education",
+}
+
 // Form validation schema
 const createOnboardingSchema = (t: (key: string) => string) => z.object({
   uni_id: z.string(), // No validation needed - extracted from email
@@ -89,7 +107,7 @@ interface OnboardingFormProps {
 export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const { t } = useTranslation()
-  const { isRTL } = useLanguage()
+  const { isRTL, language } = useLanguage()
 
   // Create schema with current translations
   const onboardingSchema = React.useMemo(() => createOnboardingSchema(t), [t])
@@ -293,7 +311,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
                   </NativeSelectOption>
                   {QU_COLLEGES.map((college) => (
                     <NativeSelectOption key={college} value={college}>
-                      {college}
+                      {language === 'ar' ? college : (COLLEGE_TRANSLATIONS[college] || college)}
                     </NativeSelectOption>
                   ))}
                   <NativeSelectOption value="other">{t('onboarding.college.other')}</NativeSelectOption>
