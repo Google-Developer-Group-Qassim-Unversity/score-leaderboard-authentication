@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n/client'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -22,6 +24,7 @@ export function VerificationCard({
   onSuccess,
   onBack,
 }: VerificationCardProps) {
+  const { t } = useTranslation()
   const { signUp } = useSignUp()
   const { signIn } = useSignIn()
   const [verificationCode, setVerificationCode] = React.useState('')
@@ -47,8 +50,12 @@ export function VerificationCard({
     ? signUp?.emailAddress 
     : signIn?.identifier
 
-  const title = type === 'sign-up' ? 'Verify Your Email' : 'Two-Factor Authentication'
-  const backButtonText = type === 'sign-up' ? 'Back to Sign Up' : 'Back to Sign In'
+  const title = type === 'sign-up' 
+    ? t('auth.verification.title.signUp')
+    : t('auth.verification.title.signIn')
+  const backButtonText = type === 'sign-up' 
+    ? t('auth.verification.back.signUp')
+    : t('auth.verification.back.signIn')
 
   const canResend = resendCooldown <= 0
 
@@ -61,7 +68,7 @@ export function VerificationCard({
     try {
       if (type === 'sign-up') {
         if (!signUp) {
-          setError('Sign up session not found')
+          setError(t('auth.verification.error.noSignUpSession'))
           return
         }
         
@@ -69,7 +76,7 @@ export function VerificationCard({
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       } else {
         if (!signIn) {
-          setError('Sign in session not found')
+          setError(t('auth.verification.error.noSignInSession'))
           return
         }
 
@@ -80,7 +87,7 @@ export function VerificationCard({
       setResendCooldown(RESEND_COOLDOWN_SECONDS)
     } catch (err: any) {
       console.error('Resend error:', err)
-      setError(err.errors?.[0]?.message || 'Failed to resend verification code')
+      setError(err.errors?.[0]?.message || t('auth.verification.error.resendFailed'))
     } finally {
       setResending(false)
     }
@@ -93,14 +100,14 @@ export function VerificationCard({
 
     try {
       if (verificationCode.length !== 6) {
-        setError('Please enter a valid 6-digit verification code')
+        setError(t('validation.verificationCode.invalid'))
         setLoading(false)
         return
       }
 
       if (type === 'sign-up') {
         if (!signUp) {
-          setError('Sign up session not found')
+          setError(t('auth.verification.error.noSignUpSession'))
           setLoading(false)
           return
         }
@@ -113,11 +120,11 @@ export function VerificationCard({
           onSuccess(result.createdSessionId)
         } else {
           console.error('Sign-up verification not complete:', result.status)
-          setError('Unable to complete verification. Please try again.')
+          setError(t('auth.verification.error.verificationFailed'))
         }
       } else {
         if (!signIn) {
-          setError('Sign in session not found')
+          setError(t('auth.verification.error.noSignInSession'))
           setLoading(false)
           return
         }
@@ -130,7 +137,7 @@ export function VerificationCard({
         if (result.status === 'complete' && result.createdSessionId) {
           onSuccess(result.createdSessionId)
         } else {
-          setError('Verification failed. Please try again.')
+          setError(t('auth.verification.error.attemptFailed'))
         }
       }
     } catch (err: any) {
@@ -143,7 +150,7 @@ export function VerificationCard({
           return
         }
       }
-      setError('An unexpected error occurred. Please try again. or contact support.')
+      setError(t('auth.verification.error.unexpected'))
     } finally {
       setLoading(false)
     }
@@ -157,12 +164,15 @@ export function VerificationCard({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">{title}</CardTitle>
           <CardDescription className="text-center">
-            Enter the code sent to <span className="font-medium text-foreground">{email}</span>
+            {t('auth.verification.description', { email })}
           </CardDescription>
         </CardHeader>
 
@@ -176,13 +186,13 @@ export function VerificationCard({
 
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="space-y-2">
-              <Label htmlFor="verificationCode">Verification Code</Label>
+              <Label htmlFor="verificationCode">{t('auth.verification.verificationCode')}</Label>
               <Input
                 id="verificationCode"
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                placeholder="000000"
+                placeholder={t('auth.verification.placeholder')}
                 value={verificationCode}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '')
@@ -207,18 +217,18 @@ export function VerificationCard({
                     {resending ? (
                       <>
                         <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
-                        Sending...
+                        {t('auth.verification.resending')}
                       </>
                     ) : (
                       <>
                         <RefreshCw className="mr-1.5 h-3 w-3" />
-                        Resend code
+                        {t('auth.verification.resend')}
                       </>
                     )}
                   </Button>
                 ) : (
                   <span className="text-sm text-muted-foreground">
-                    Resend code in {resendCooldown}s
+                    {t('auth.verification.resendCountdown', { countdown: resendCooldown })}
                   </span>
                 )}
               </div>
@@ -229,7 +239,7 @@ export function VerificationCard({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  <span>Go to Outlook</span>
+                  <span>{t('auth.verification.goToOutlook')}</span>
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
@@ -244,10 +254,10 @@ export function VerificationCard({
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
+                  {t('auth.verification.verifying')}
                 </>
               ) : (
-                'Verify Code'
+                t('auth.verification.submit')
               )}
             </Button>
 

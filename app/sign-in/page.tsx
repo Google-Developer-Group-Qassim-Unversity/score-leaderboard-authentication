@@ -25,23 +25,29 @@ import Link from 'next/link'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { saveRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import { VerificationCard } from '@/components/verification-card'
+import { useTranslation } from '@/lib/i18n/client'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
-const signInSchema = z.object({
+const createSignInSchema = (t: (key: string) => string) => z.object({
   universityId: z.string()
-    .min(9, 'University ID must be 9 digits')
-    .max(9, 'University ID must be 9 digits')
-    .regex(/^\d{9}$/, 'University ID must be exactly 9 digits'),
-  password: z.string().min(1, 'Password is required'),
+    .min(9, t('validation.universityId.mustBe9Digits'))
+    .max(9, t('validation.universityId.mustBe9Digits'))
+    .regex(/^\d{9}$/, t('validation.universityId.exactly9Digits')),
+  password: z.string().min(1, t('validation.password.required')),
 })
 
-type SignInFormValues = z.infer<typeof signInSchema>
+type SignInFormValues = {
+  universityId: string
+  password: string
+}
 
 export default function SignInPage() {
+  const { t } = useTranslation()
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading...</span>
+        <span className="ml-2">{t('common.loading')}</span>
       </div>
     }>
       <SignInContent />
@@ -50,6 +56,7 @@ export default function SignInPage() {
 }
 
 function SignInContent() {
+  const { t } = useTranslation()
   const { isLoaded, signIn, setActive } = useSignIn()
   const { isSignedIn } = useAuth() 
   const [error, setError] = React.useState('')
@@ -57,6 +64,8 @@ function SignInContent() {
   const [needsSecondFactor, setNeedsSecondFactor] = React.useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const signInSchema = React.useMemo(() => createSignInSchema(t), [t])
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -122,7 +131,7 @@ function SignInContent() {
         // FIX 2: Ensure session ID exists before calling handleComplete
         if (!result.createdSessionId) {
             console.error("Session complete but no ID returned")
-            setError('Error creating session.')
+            setError(t('auth.signIn.error.sessionError'))
             return
         }
         await handleComplete(result.createdSessionId)
@@ -132,7 +141,7 @@ function SignInContent() {
         )?.emailAddressId
 
         if (!emailAddressId) {
-          setError('Unable to send verification code.')
+          setError(t('auth.signIn.error.verificationCode'))
           return
         }
 
@@ -146,15 +155,15 @@ function SignInContent() {
         console.log(`code sent, took ${(end - start).toFixed(2)} ms`)
         setNeedsSecondFactor(true)
       } else {
-        setError('Unable to complete sign in.')
+        setError(t('auth.signIn.error.signInFailed'))
       }
     } catch (err: any) {
       console.error('Sign-in error:', err)
       if (err.errors?.[0]?.code === 'form_password_incorrect' || 
           err.errors?.[0]?.code === 'form_identifier_not_found') {
-        setError('Invalid email or password')
+        setError(t('auth.signIn.error.invalidCredentials'))
       } else {
-        setError(err.errors?.[0]?.longMessage || 'An unexpected error occurred.')
+        setError(err.errors?.[0]?.longMessage || t('auth.signIn.error.unexpected'))
       }
     } finally {
       setLoading(false)
@@ -170,7 +179,7 @@ function SignInContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading...</span>
+        <span className="ml-2">{t('common.loading')}</span>
       </div>
     )
   }
@@ -188,6 +197,9 @@ function SignInContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md border-t-4 border-t-blue-600">
         <CardHeader>
           <div className="flex justify-center mb-4">
@@ -200,12 +212,12 @@ function SignInContent() {
           </div>
           <div className="flex justify-center mb-2">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-              Sign In
+              {t('auth.signIn.badge')}
             </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">{t('auth.signIn.title')}</CardTitle>
           <CardDescription className="text-center">
-            Sign in to your GDG-Q account
+            {t('auth.signIn.description')}
           </CardDescription>
         </CardHeader>
 
@@ -224,13 +236,13 @@ function SignInContent() {
                 name="universityId"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>University ID</FormLabel>
+                    <FormLabel>{t('auth.signIn.universityId')}</FormLabel>
                     <FormControl>
                       <div className={`flex items-center rounded-md border ${fieldState.error ? 'border-destructive' : 'border-input'} focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2`}>
                         <Input
                           type="text"
                           inputMode="numeric"
-                          placeholder="442106350"
+                          placeholder={t('auth.signIn.universityIdPlaceholder')}
                           autoComplete="username"
                           maxLength={9}
                           className="border-0 rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -238,7 +250,7 @@ function SignInContent() {
                           disabled={loading}
                         />
                         <span className="inline-flex items-center px-3 h-10 bg-background text-muted-foreground text-sm border-l border-input rounded-r-md">
-                          @qu.edu.sa
+                          {t('auth.signIn.emailSuffix')}
                         </span>
                       </div>
                     </FormControl>
@@ -252,10 +264,10 @@ function SignInContent() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('auth.signIn.password')}</FormLabel>
                     <FormControl>
                       <PasswordInput
-                        placeholder="Enter password"
+                        placeholder={t('auth.signIn.passwordPlaceholder')}
                         autoComplete="current-password"
                         {...field}
                         disabled={loading}
@@ -270,10 +282,10 @@ function SignInContent() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing In...
+                    {t('auth.signIn.signingIn')}
                   </>
                 ) : (
-                  'Sign In'
+                  t('auth.signIn.submit')
                 )}
               </Button>
             </form>
@@ -282,12 +294,12 @@ function SignInContent() {
 
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-muted-foreground">
-            Don't have an account?{' '}
+            {t('auth.signIn.footer.text')}{' '}
             <Link 
               href="/sign-up" 
               className="text-primary hover:underline"
             >
-              Sign Up
+              {t('auth.signIn.footer.link')}
             </Link>
           </div>
           <div className="text-sm text-center">
@@ -295,7 +307,7 @@ function SignInContent() {
               href="/forgot-password"
               className="text-primary hover:underline"
             >
-              Forgot Password?
+              {t('auth.signIn.forgotPassword')}
             </Link>
           </div>
         </CardFooter>

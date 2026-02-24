@@ -1,8 +1,10 @@
 'use client'
 
 import { useUser, UserButton } from '@clerk/nextjs'
+import { useTranslation } from '@/lib/i18n/client'
 
 export function UserAccountCard() {
+  const { t } = useTranslation()
   const { user } = useUser()
 
   return (
@@ -21,7 +23,7 @@ export function UserAccountCard() {
         </div>
         <div className="flex flex-col min-w-0">
           <span className="text-sm sm:text-base font-semibold truncate">
-            {user?.fullName || 'User'}
+            {user?.fullName || t('profile.userCard.defaultName')}
           </span>
           <span className="text-xs sm:text-sm text-muted-foreground truncate">
             {user?.primaryEmailAddress?.emailAddress}
@@ -29,7 +31,7 @@ export function UserAccountCard() {
         </div>
       </div>
       <div className="hidden sm:block text-xs text-muted-foreground ml-2 whitespace-nowrap">
-        Click avatar to manage →
+        {t('profile.userCard.clickToManage')}
       </div>
     </div>
   )

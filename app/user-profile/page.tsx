@@ -7,8 +7,11 @@ import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clearRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import * as React from 'react'
+import { useTranslation } from '@/lib/i18n/client'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
 export default function SignedInPage() {
+  const { t } = useTranslation()
   const { user, isLoaded } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
@@ -55,9 +58,9 @@ export default function SignedInPage() {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-6 space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900">Sign Out</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{t('profile.signOutTitle')}</h2>
           <p className="text-slate-600 max-w-md">
-            Are you sure you want to sign out
+            {t('profile.signOutDescription')}
           </p>
         </div>
         <Button 
@@ -67,23 +70,26 @@ export default function SignedInPage() {
           className="w-full max-w-xs"
         >
           <LogOut className="mr-2 h-5 w-5" />
-          Sign Out
+          {t('profile.signOutButton')}
         </Button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center py-12 px-4 relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-4xl space-y-8 flex flex-col items-center">
         {/* Welcome Message Card */}
         <Card className="w-full bg-gradient-to-br from-green-50/50 to-white rounded-2xl shadow-lg border border-slate-200">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
-              {fullArabicName ? `حياك، ${fullArabicName}` : 'Welcome!'}
+              {fullArabicName ? t('profile.titleWithName', { name: fullArabicName }) : t('profile.title')}
             </CardTitle>
             <CardDescription className="text-lg mt-2">
-              تم تسجيل دخولك بنجاح تقدر تتحكم بحسابك من هنا
+              {t('profile.description')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -99,7 +105,7 @@ export default function SignedInPage() {
             }}
           >
             <UserProfile.Page 
-              label="sign-out" 
+              label={t('profile.signOutTab')}
               labelIcon={<SignOutIcon />} 
               url="sign-out"
             >

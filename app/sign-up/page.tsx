@@ -17,19 +17,25 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { VerificationCard } from '@/components/verification-card'
 import { saveRedirectUrl } from '@/lib/redirect-storage'
 import { AlertCircle, Loader2, UserPlus } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n/client'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
-const signUpSchema = z.object({
+// Schema will be created inside component to access t function
+const createSignUpSchema = (t: (key: string) => string) => z.object({
   universityId: z
     .string()
-    .min(9, 'University ID must be 9 digits')
-    .max(9, 'University ID must be 9 digits')
-    .regex(/^\d{9}$/, 'University ID must be exactly 9 digits'),
+    .min(9, t('validation.universityId.mustBe9Digits'))
+    .max(9, t('validation.universityId.mustBe9Digits'))
+    .regex(/^\d{9}$/, t('validation.universityId.exactly9Digits')),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters'),
+    .min(8, t('validation.password.minLength')),
 })
 
-type SignUpFormValues = z.infer<typeof signUpSchema>
+type SignUpFormValues = {
+  universityId: string
+  password: string
+}
 
 export default function SignUpPage() {
   return (
@@ -44,12 +50,15 @@ export default function SignUpPage() {
 }
 
 function SignUpContent() {
+  const { t } = useTranslation()
   const { isLoaded, signUp, setActive } = useSignUp()
   const [pendingVerification, setPendingVerification] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const signUpSchema = React.useMemo(() => createSignUpSchema(t), [t])
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -96,12 +105,12 @@ function SignUpContent() {
       if (err.clerkError) {
         console.log('got Clerk error code:', err.code)
         if (err?.errors[0]?.message.includes('That email address is taken')) {
-          setError('An account associated with this email already exists. Please sign in instead.')
+          setError(t('auth.signUp.error.emailExists'))
           return
         }
         setError(err.errors?.[0]?.message)
       } else {
-        setError('An unexpected error occurred. Please try again. or contact support.')
+        setError(t('auth.signUp.error.unexpected'))
       }
     } finally {
       setLoading(false)
@@ -130,6 +139,7 @@ function SignUpContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">{t('common.loading')}</span>
       </div>
     )
   }
@@ -148,6 +158,9 @@ function SignUpContent() {
   // Show sign-up form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md border-t-4 border-t-green-600">
         <CardHeader>
           <div className="flex justify-center mb-4">
@@ -160,14 +173,14 @@ function SignUpContent() {
           </div>
           <div className="flex justify-center mb-2">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-              New Account
+              {t('auth.signUp.badge')}
             </span>
           </div>
           <CardTitle className="text-2xl font-bold text-center">
-            Create Account
+            {t('auth.signUp.title')}
           </CardTitle>
           <CardDescription className="text-center">
-            Sign up with your QU email address
+            {t('auth.signUp.description')}
           </CardDescription>
         </CardHeader>
 
@@ -186,13 +199,13 @@ function SignUpContent() {
                 name="universityId"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>University ID</FormLabel>
+                    <FormLabel>{t('auth.signUp.universityId')}</FormLabel>
                     <FormControl>
                       <div className={`flex items-center rounded-md border ${fieldState.error ? 'border-destructive' : 'border-input'} focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2`}>
                         <Input
                           type="text"
                           inputMode="numeric"
-                          placeholder="442106350"
+                          placeholder={t('auth.signUp.universityIdPlaceholder')}
                           autoComplete="username"
                           maxLength={9}
                           className="border-0 rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -200,7 +213,7 @@ function SignUpContent() {
                           {...field}
                         />
                         <span className="inline-flex items-center px-3 h-10 bg-background text-muted-foreground text-sm border-l border-input rounded-r-md">
-                          @qu.edu.sa
+                          {t('auth.signUp.emailSuffix')}
                         </span>
                       </div>
                     </FormControl>
@@ -214,10 +227,10 @@ function SignUpContent() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('auth.signUp.password')}</FormLabel>
                     <FormControl>
                       <PasswordInput
-                        placeholder="Enter password"
+                        placeholder={t('auth.signUp.passwordPlaceholder')}
                         autoComplete="new-password"
                         disabled={loading}
                         {...field}
@@ -235,12 +248,12 @@ function SignUpContent() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Account...
+                    {t('auth.signUp.creating')}
                   </>
                 ) : (
                   <>
                     <UserPlus className="mr-2 h-4 w-4" />
-                    Create Account
+                    {t('auth.signUp.submit')}
                   </>
                 )}
               </Button>
@@ -250,12 +263,12 @@ function SignUpContent() {
 
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-muted-foreground">
-            Already have an account?{' '}
+            {t('auth.signUp.footer.text')}{' '}
             <Link 
               href="/sign-in" 
               className="text-primary hover:underline"
             >
-              Sign In
+              {t('auth.signUp.footer.link')}
             </Link>
           </div>
         </CardFooter>

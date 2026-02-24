@@ -24,34 +24,38 @@ import {
 } from '@/components/ui/form'
 import { AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslation } from '@/lib/i18n/client'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
-// Step 1: University ID schema
-const universityIdSchema = z.object({
+// Step 1: University ID schema factory
+const createUniversityIdSchema = (t: any) => z.object({
   universityId: z.string()
-    .min(9, 'University ID must be 9 digits')
-    .max(9, 'University ID must be 9 digits')
-    .regex(/^\d{9}$/, 'University ID must be exactly 9 digits'),
+    .min(9, t('validation.universityId.mustBe9Digits'))
+    .max(9, t('validation.universityId.mustBe9Digits'))
+    .regex(/^\d{9}$/, t('validation.universityId.exactly9Digits')),
 })
 
-// Step 3: New password schema
-const newPasswordSchema = z.object({
+// Step 3: New password schema factory
+const createNewPasswordSchema = (t: any) => z.object({
   password: z.string()
-    .min(8, 'Password must be at least 8 characters'),
+    .min(8, t('validation.password.minLength')),
 })
 
-type UniversityIdFormValues = z.infer<typeof universityIdSchema>
-type NewPasswordFormValues = z.infer<typeof newPasswordSchema>
+type UniversityIdFormValues = z.infer<ReturnType<typeof createUniversityIdSchema>>
+type NewPasswordFormValues = z.infer<ReturnType<typeof createNewPasswordSchema>>
 
 type Step = 'university-id' | 'verification' | 'new-password'
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation()
+  
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading...</span>
+        <span className="ml-2">{t('common.loading')}</span>
       </div>
     }>
       <ForgotPasswordContent />
@@ -60,6 +64,7 @@ export default function ForgotPasswordPage() {
 }
 
 function ForgotPasswordContent() {
+  const { t } = useTranslation()
   const { isLoaded, signIn, setActive } = useSignIn()
   const { isSignedIn } = useAuth()
   const router = useRouter()
@@ -74,6 +79,10 @@ function ForgotPasswordContent() {
   const [codeError, setCodeError] = React.useState(false)
   const [resendCooldown, setResendCooldown] = React.useState(0)
   const [resending, setResending] = React.useState(false)
+
+  // Create schemas with current translation function
+  const universityIdSchema = React.useMemo(() => createUniversityIdSchema(t), [t])
+  const newPasswordSchema = React.useMemo(() => createNewPasswordSchema(t), [t])
 
   // Forms
   const universityIdForm = useForm<UniversityIdFormValues>({
@@ -130,9 +139,9 @@ function ForgotPasswordContent() {
     } catch (err: any) {
       console.error('Reset password error:', err)
       if (err.errors?.[0]?.code === 'form_identifier_not_found') {
-        setError('No account found with this University ID')
+        setError(t('auth.forgotPassword.step1.error.noAccount'))
       } else {
-        setError(err.errors?.[0]?.longMessage || 'An unexpected error occurred.')
+        setError(err.errors?.[0]?.longMessage || t('auth.forgotPassword.step1.error.unexpected'))
       }
     } finally {
       setLoading(false)
@@ -154,7 +163,7 @@ function ForgotPasswordContent() {
       setResendCooldown(RESEND_COOLDOWN_SECONDS)
     } catch (err: any) {
       console.error('Resend error:', err)
-      setError(err.errors?.[0]?.message || 'Failed to resend verification code')
+      setError(err.errors?.[0]?.message || t('auth.forgotPassword.step2.error.resendFailed'))
     } finally {
       setResending(false)
     }
@@ -166,7 +175,7 @@ function ForgotPasswordContent() {
     setError('')
 
     if (verificationCode.length !== 6) {
-      setError('Please enter a valid 6-digit verification code')
+      setError(t('validation.verificationCode.invalid'))
       return
     }
 
@@ -189,7 +198,7 @@ function ForgotPasswordContent() {
 
       if (result.status === 'needs_second_factor') {
         // Handle 2FA if needed - for now show error
-        setError('Two-factor authentication is required. Please contact support.')
+        setError(t('auth.forgotPassword.step2.error.2faRequired'))
       } else if (result.status === 'complete') {
         // Password reset successful - set active session and redirect
         if (setActive && result.createdSessionId) {
@@ -199,7 +208,7 @@ function ForgotPasswordContent() {
         }
       } else {
         console.log('Unexpected result:', result)
-        setError('Unable to reset password. Please try again.')
+        setError(t('auth.forgotPassword.step3.error.resetFailed'))
       }
     } catch (err: any) {
       console.error('Password reset error:', JSON.stringify(err, null, 2))
@@ -212,7 +221,7 @@ function ForgotPasswordContent() {
           return
         }
       }
-      setError(err.errors?.[0]?.longMessage || 'An unexpected error occurred. Please try again or contact support.')
+      setError(err.errors?.[0]?.longMessage || t('auth.forgotPassword.step3.error.unexpected'))
     } finally {
       setLoading(false)
     }
@@ -233,7 +242,7 @@ function ForgotPasswordContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading...</span>
+        <span className="ml-2">{t('common.loading')}</span>
       </div>
     )
   }
@@ -241,12 +250,15 @@ function ForgotPasswordContent() {
   // Step 1: University ID Input
   if (step === 'university-id') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Forgot Password?</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">{t('auth.forgotPassword.step1.title')}</CardTitle>
             <CardDescription className="text-center">
-              Enter your University ID to receive a password reset code
+              {t('auth.forgotPassword.step1.description')}
             </CardDescription>
           </CardHeader>
 
@@ -265,13 +277,13 @@ function ForgotPasswordContent() {
                   name="universityId"
                   render={({ field, fieldState }) => (
                     <FormItem>
-                      <FormLabel>University ID</FormLabel>
+                      <FormLabel>{t('auth.forgotPassword.step1.universityId')}</FormLabel>
                       <FormControl>
                         <div className={`flex items-center rounded-md border ${fieldState.error ? 'border-destructive' : 'border-input'} focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2`}>
                           <Input
                             type="text"
                             inputMode="numeric"
-                            placeholder="442106350"
+                            placeholder={t('auth.forgotPassword.step1.placeholder')}
                             autoComplete="username"
                             maxLength={9}
                             className="border-0 rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -292,10 +304,10 @@ function ForgotPasswordContent() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending Code...
+                      {t('auth.forgotPassword.step1.sending')}
                     </>
                   ) : (
-                    'Send Reset Code'
+                    t('auth.forgotPassword.step1.submit')
                   )}
                 </Button>
               </form>
@@ -304,9 +316,9 @@ function ForgotPasswordContent() {
 
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-center text-muted-foreground">
-              Remember your password?{' '}
+              {t('auth.forgotPassword.step1.footer.text')}{' '}
               <Link href="/sign-in" className="text-primary hover:underline">
-                Sign In
+                {t('auth.forgotPassword.step1.footer.link')}
               </Link>
             </div>
           </CardFooter>
@@ -318,12 +330,15 @@ function ForgotPasswordContent() {
   // Step 2: Verification Code
   if (step === 'verification') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Enter Reset Code</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">{t('auth.forgotPassword.step2.title')}</CardTitle>
             <CardDescription className="text-center">
-              We sent a password reset code to <span className="font-medium text-foreground">{email}</span>
+              {t('auth.forgotPassword.step2.description', { email })}
             </CardDescription>
           </CardHeader>
 
@@ -337,13 +352,13 @@ function ForgotPasswordContent() {
 
             <form onSubmit={onSubmitVerification} className="space-y-8">
               <div className="space-y-2">
-                <Label htmlFor="verificationCode">Verification Code</Label>
+                <Label htmlFor="verificationCode">{t('auth.forgotPassword.step2.verificationCode')}</Label>
                 <Input
                   id="verificationCode"
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder="000000"
+                  placeholder={t('auth.forgotPassword.step2.placeholder')}
                   value={verificationCode}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '')
@@ -368,18 +383,18 @@ function ForgotPasswordContent() {
                       {resending ? (
                         <>
                           <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
-                          Sending...
+                          {t('auth.forgotPassword.step2.resending')}
                         </>
                       ) : (
                         <>
                           <RefreshCw className="mr-1.5 h-3 w-3" />
-                          Resend code
+                          {t('auth.forgotPassword.step2.resend')}
                         </>
                       )}
                     </Button>
                   ) : (
                     <span className="text-sm text-muted-foreground">
-                      Resend code in {resendCooldown}s
+                      {t('auth.forgotPassword.step2.resendCountdown', { countdown: resendCooldown })}
                     </span>
                   )}
                 </div>
@@ -390,7 +405,7 @@ function ForgotPasswordContent() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
-                    <span>Go to Outlook</span>
+                    <span>{t('auth.forgotPassword.step2.goToOutlook')}</span>
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
@@ -402,7 +417,7 @@ function ForgotPasswordContent() {
                   className="w-full"
                   disabled={loading || verificationCode.length !== 6}
                 >
-                  Continue
+                  {t('auth.forgotPassword.step2.continue')}
                 </Button>
 
                 <Button
@@ -412,7 +427,7 @@ function ForgotPasswordContent() {
                   onClick={handleBack}
                   disabled={loading}
                 >
-                  Back
+                  {t('auth.forgotPassword.step2.back')}
                 </Button>
               </div>
             </form>
@@ -424,12 +439,15 @@ function ForgotPasswordContent() {
 
   // Step 3: New Password
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Reset Password</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">{t('auth.forgotPassword.step3.title')}</CardTitle>
           <CardDescription className="text-center">
-            Enter your new password
+            {t('auth.forgotPassword.step3.description')}
           </CardDescription>
         </CardHeader>
 
@@ -448,10 +466,10 @@ function ForgotPasswordContent() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>New Password</FormLabel>
+                    <FormLabel>{t('auth.forgotPassword.step3.newPassword')}</FormLabel>
                     <FormControl>
                       <PasswordInput
-                        placeholder="Enter new password"
+                        placeholder={t('auth.forgotPassword.step3.placeholder')}
                         autoComplete="new-password"
                         {...field}
                         disabled={loading}
@@ -467,10 +485,10 @@ function ForgotPasswordContent() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Resetting Password...
+                      {t('auth.forgotPassword.step3.resetting')}
                     </>
                   ) : (
-                    'Reset Password'
+                    t('auth.forgotPassword.step3.submit')
                   )}
                 </Button>
 
@@ -481,7 +499,7 @@ function ForgotPasswordContent() {
                   onClick={handleBack}
                   disabled={loading}
                 >
-                  Back
+                  {t('auth.forgotPassword.step3.back')}
                 </Button>
               </div>
             </form>
