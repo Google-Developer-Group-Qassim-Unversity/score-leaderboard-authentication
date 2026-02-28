@@ -20,13 +20,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { AlertCircle, Loader2, UserPlus  } from 'lucide-react'
+import { AlertCircle, Loader2, UserPlus } from 'lucide-react'
 import Link from 'next/link'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { saveRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import { VerificationCard } from '@/components/verification-card'
 import { useTranslation } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { BackButton } from '@/components/back-button'
 
 const createSignInSchema = (t: (key: string) => string) => z.object({
   universityId: z.string()
@@ -58,7 +59,7 @@ export default function SignInPage() {
 function SignInContent() {
   const { t } = useTranslation()
   const { isLoaded, signIn, setActive } = useSignIn()
-  const { isSignedIn } = useAuth() 
+  const { isSignedIn } = useAuth()
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
   const [needsSecondFactor, setNeedsSecondFactor] = React.useState(false)
@@ -91,9 +92,9 @@ function SignInContent() {
     if (isLoaded && isSignedIn) {
       const redirectUrl = getValidatedRedirectUrl()
       if (redirectUrl) {
-         window.location.href = redirectUrl
+        window.location.href = redirectUrl
       } else {
-         router.push('/user-profile')
+        router.push('/user-profile')
       }
     }
   }, [isLoaded, isSignedIn, router])
@@ -130,9 +131,9 @@ function SignInContent() {
       if (result.status === 'complete') {
         // FIX 2: Ensure session ID exists before calling handleComplete
         if (!result.createdSessionId) {
-            console.error("Session complete but no ID returned")
-            setError(t('auth.signIn.error.sessionError'))
-            return
+          console.error("Session complete but no ID returned")
+          setError(t('auth.signIn.error.sessionError'))
+          return
         }
         await handleComplete(result.createdSessionId)
       } else if (result.status === 'needs_second_factor') {
@@ -159,8 +160,8 @@ function SignInContent() {
       }
     } catch (err: any) {
       console.error('Sign-in error:', err)
-      if (err.errors?.[0]?.code === 'form_password_incorrect' || 
-          err.errors?.[0]?.code === 'form_identifier_not_found') {
+      if (err.errors?.[0]?.code === 'form_password_incorrect' ||
+        err.errors?.[0]?.code === 'form_identifier_not_found') {
         setError(t('auth.signIn.error.invalidCredentials'))
       } else {
         setError(err.errors?.[0]?.longMessage || t('auth.signIn.error.unexpected'))
@@ -196,7 +197,10 @@ function SignInContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 left-4">
+        <BackButton />
+      </div>
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -295,15 +299,15 @@ function SignInContent() {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-muted-foreground">
             {t('auth.signIn.footer.text')}{' '}
-            <Link 
-              href="/sign-up" 
+            <Link
+              href="/sign-up"
               className="text-primary hover:underline"
             >
               {t('auth.signIn.footer.link')}
             </Link>
           </div>
           <div className="text-sm text-center">
-            <Link 
+            <Link
               href="/forgot-password"
               className="text-primary hover:underline"
             >

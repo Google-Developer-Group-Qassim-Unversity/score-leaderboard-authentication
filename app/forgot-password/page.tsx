@@ -26,6 +26,7 @@ import { AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslation } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { BackButton } from '@/components/back-button'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -50,7 +51,7 @@ type Step = 'university-id' | 'verification' | 'new-password'
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation()
-  
+
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
@@ -68,12 +69,12 @@ function ForgotPasswordContent() {
   const { isLoaded, signIn, setActive } = useSignIn()
   const { isSignedIn } = useAuth()
   const router = useRouter()
-  
+
   const [step, setStep] = React.useState<Step>('university-id')
   const [email, setEmail] = React.useState('')
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
-  
+
   // Verification code state
   const [verificationCode, setVerificationCode] = React.useState('')
   const [codeError, setCodeError] = React.useState(false)
@@ -133,7 +134,7 @@ function ForgotPasswordContent() {
         strategy: 'reset_password_email_code',
         identifier: emailAddress,
       })
-      
+
       setResendCooldown(RESEND_COOLDOWN_SECONDS)
       setStep('verification')
     } catch (err: any) {
@@ -251,6 +252,9 @@ function ForgotPasswordContent() {
   if (step === 'university-id') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute top-4 left-4">
+          <BackButton />
+        </div>
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
@@ -331,6 +335,9 @@ function ForgotPasswordContent() {
   if (step === 'verification') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+        <div className="absolute top-4 left-4">
+          <BackButton />
+        </div>
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
@@ -410,7 +417,7 @@ function ForgotPasswordContent() {
                   </a>
                 </div>
               </div>
-              
+
               <div className="flex flex-col gap-2 mt-4">
                 <Button
                   type="submit"
@@ -440,6 +447,9 @@ function ForgotPasswordContent() {
   // Step 3: New Password
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 left-4">
+        <BackButton />
+      </div>
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>

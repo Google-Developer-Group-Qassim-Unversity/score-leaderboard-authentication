@@ -19,6 +19,7 @@ import { saveRedirectUrl } from '@/lib/redirect-storage'
 import { AlertCircle, Loader2, UserPlus } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { BackButton } from '@/components/back-button'
 
 // Schema will be created inside component to access t function
 const createSignUpSchema = (t: (key: string) => string) => z.object({
@@ -120,7 +121,7 @@ function SignUpContent() {
   // Handle successful verification
   const handleVerificationSuccess = async (sessionId: string) => {
     if (!setActive) return
-    
+
     await setActive({
       session: sessionId,
       navigate: async ({ session }) => {
@@ -157,7 +158,10 @@ function SignUpContent() {
 
   // Show sign-up form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 left-4">
+        <BackButton />
+      </div>
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -264,8 +268,8 @@ function SignUpContent() {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-muted-foreground">
             {t('auth.signUp.footer.text')}{' '}
-            <Link 
-              href="/sign-in" 
+            <Link
+              href="/sign-in"
               className="text-primary hover:underline"
             >
               {t('auth.signUp.footer.link')}

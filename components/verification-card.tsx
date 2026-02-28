@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { BackButton } from '@/components/back-button'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -46,14 +47,14 @@ export function VerificationCard({
   }, [resendCooldown])
 
   // Get email from Clerk based on type
-  const email = type === 'sign-up' 
-    ? signUp?.emailAddress 
+  const email = type === 'sign-up'
+    ? signUp?.emailAddress
     : signIn?.identifier
 
-  const title = type === 'sign-up' 
+  const title = type === 'sign-up'
     ? t('auth.verification.title.signUp')
     : t('auth.verification.title.signIn')
-  const backButtonText = type === 'sign-up' 
+  const backButtonText = type === 'sign-up'
     ? t('auth.verification.back.signUp')
     : t('auth.verification.back.signIn')
 
@@ -71,7 +72,7 @@ export function VerificationCard({
           setError(t('auth.verification.error.noSignUpSession'))
           return
         }
-        
+
         console.log('Resending sign-up verification code to:', email)
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
       } else {
@@ -165,6 +166,9 @@ export function VerificationCard({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 left-4">
+        <BackButton />
+      </div>
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -246,31 +250,31 @@ export function VerificationCard({
             </div>
             <div className="flex flex-col gap-2 mt-4">
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || verificationCode.length !== 6}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('auth.verification.verifying')}
-                </>
-              ) : (
-                t('auth.verification.submit')
-              )}
-            </Button>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || verificationCode.length !== 6}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('auth.verification.verifying')}
+                  </>
+                ) : (
+                  t('auth.verification.submit')
+                )}
+              </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={handleBack}
-              disabled={loading}
-            >
-              {backButtonText}
-            </Button>
-          </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={handleBack}
+                disabled={loading}
+              >
+                {backButtonText}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
