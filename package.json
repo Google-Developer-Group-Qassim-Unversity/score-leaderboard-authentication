@@ -17,7 +17,6 @@
     "@radix-ui/react-radio-group": "1.2.2",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "1.1.1",
-    "@sentry/nextjs": "^10.39.0",
     "@vercel/analytics": "latest",
     "autoprefixer": "^10.4.24",
     "class-variance-authority": "^0.7.1",
