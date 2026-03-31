@@ -10,9 +10,9 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'ar', // Default to Arabic
+    fallbackLng: 'en',
     defaultNS: 'translation',
-    lng: 'ar', // Start with Arabic
+    lng: 'en',
     interpolation: {
       escapeValue: false, // React already escapes
     },
