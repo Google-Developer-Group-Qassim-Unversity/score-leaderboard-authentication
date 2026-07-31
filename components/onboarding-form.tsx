@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Loader2, Lock } from 'lucide-react'
-import { QU_COLLEGES, UNI_LEVELS } from '@/lib/constants'
+import { QU_COLLEGES, UNI_LEVELS, GRADUATED_LEVEL } from '@/lib/constants'
 import { useTranslation, useLanguage } from '@/lib/i18n/client'
 
 // College name translations (official names from Qassim University website)
@@ -43,35 +43,37 @@ const COLLEGE_TRANSLATIONS: Record<string, string> = {
 }
 
 // Form validation schema
-const createOnboardingSchema = (t: (key: string) => string) => z.object({
-  uni_id: z.string(), // No validation needed - extracted from email
+const createOnboardingSchema = (t: (key: string) => string, personalEmailLocked: boolean) => z.object({
+  uni_id: z
+    .string()
+    .optional()
+    .refine((value) => !value || /^\d{9}$/.test(value), {
+      message: t('validation.universityId.exactly9Digits'),
+    }),
   fullArabicName: z
     .string()
-    .min(1, t('onboarding.validation.fullName.required'))
-    .regex(/^[\u0600-\u06FF\s]+$/, t('onboarding.validation.fullName.arabicOnly')),
+    .min(1, t('onboarding.validation.fullName.required')),
   saudiPhone: z
     .string()
     .length(10, t('onboarding.validation.phone.length'))
     .regex(/^05\d{8}$/, t('onboarding.validation.phone.format')),
   gender: z.enum(['Male', 'Female'], { required_error: t('onboarding.validation.gender.required') }),
-  uniLevel: z
-    .number({ required_error: t('onboarding.validation.level.required') })
-    .min(1, t('onboarding.validation.level.min'))
-    .max(10, t('onboarding.validation.level.max')),
-  uniCollegeSelection: z
-    .string()
-    .min(1, t('onboarding.validation.college.required')),
+  // Academic info is optional - not everyone signing up is a current QU student.
+  uniLevel: z.number().optional(),
+  uniCollegeSelection: z.string().optional(),
   uniCollegeOther: z.string().optional(),
-  personalEmail: z
-    .string()
-    .email(t('onboarding.validation.email.invalid'))
-    .refine(
-      (email) => {
-        const domain = email.split('@')[1]
-        return domain !== 'qu.edu.sa'
-      },
-      { message: t('onboarding.validation.email.notQuEmail') }
-    ),
+  personalEmail: personalEmailLocked
+    ? z.string().email(t('onboarding.validation.email.invalid'))
+    : z
+        .string()
+        .email(t('onboarding.validation.email.invalid'))
+        .refine(
+          (email) => {
+            const domain = email.split('@')[1]
+            return domain !== 'qu.edu.sa'
+          },
+          { message: t('onboarding.validation.email.notQuEmail') }
+        ),
 }).refine(
   (data) => {
     if (data.uniCollegeSelection === 'other') {
@@ -85,32 +87,45 @@ const createOnboardingSchema = (t: (key: string) => string) => z.object({
   }
 )
 
+function RequiredMark() {
+  return <span className="text-destructive"> *</span>
+}
+
+function OptionalMark({ label }: { label: string }) {
+  return <span className="text-muted-foreground font-normal text-xs"> ({label})</span>
+}
+
 type OnboardingSchema = ReturnType<typeof createOnboardingSchema>
 type FormValues = z.infer<OnboardingSchema>
 
 // Transform form values to output values (with uni_college instead of selection/other)
 export interface OnboardingFormValues {
-  uni_id: string
+  uni_id: string | undefined
   fullArabicName: string
   saudiPhone: string
   gender: 'Male' | 'Female'
-  uniLevel: number
-  uniCollege: string
+  uniLevel: number | undefined
+  uniCollege: string | undefined
   personalEmail: string
 }
 
 interface OnboardingFormProps {
   uniId: string
+  /** For Google sign-ups: the Google account email, pre-filled and locked. */
+  lockedPersonalEmail?: string
   onSubmit: (data: OnboardingFormValues) => void | Promise<void>
 }
 
-export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
+export function OnboardingForm({ uniId, lockedPersonalEmail, onSubmit }: OnboardingFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const { t } = useTranslation()
   const { isRTL, language } = useLanguage()
 
   // Create schema with current translations
-  const onboardingSchema = React.useMemo(() => createOnboardingSchema(t), [t])
+  const onboardingSchema = React.useMemo(
+    () => createOnboardingSchema(t, !!lockedPersonalEmail),
+    [t, lockedPersonalEmail]
+  )
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardingSchema),
@@ -122,7 +137,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
       uniLevel: undefined,
       uniCollegeSelection: '',
       uniCollegeOther: '',
-      personalEmail: '',
+      personalEmail: lockedPersonalEmail || '',
     },
   })
 
@@ -135,19 +150,26 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
     }
   }, [uniId, form])
 
+  // Update personalEmail when the locked (Google account) value changes
+  React.useEffect(() => {
+    if (lockedPersonalEmail) {
+      form.setValue('personalEmail', lockedPersonalEmail)
+    }
+  }, [lockedPersonalEmail, form])
+
   const handleSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
     try {
       // Transform to output format
       const outputData: OnboardingFormValues = {
-        uni_id: data.uni_id,
+        uni_id: data.uni_id?.trim() || undefined,
         fullArabicName: data.fullArabicName,
         saudiPhone: data.saudiPhone,
         gender: data.gender,
         uniLevel: data.uniLevel,
-        uniCollege: data.uniCollegeSelection === 'other' 
-          ? data.uniCollegeOther! 
-          : data.uniCollegeSelection,
+        uniCollege: data.uniCollegeSelection === 'other'
+          ? data.uniCollegeOther
+          : (data.uniCollegeSelection || undefined),
         personalEmail: data.personalEmail,
       }
       await onSubmit(outputData)
@@ -159,40 +181,44 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* UI ID Field - Auto-populated from email */}
-        <FormField
-          control={form.control}
-          name="uni_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.uniId.label')}</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    placeholder="444444444"
-                    {...field}
-                    disabled={true}
-                    className="bg-muted/60 cursor-not-allowed text-muted-foreground border-dashed opacity-70"
-                    dir="ltr"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded border">
-                    <Lock className="h-3 w-3" />
-                    {t('onboarding.uniId.autoFilled')}
+        {/* University ID - only shown at all for QU sign-ups (derived from their
+            @qu.edu.sa email), locked since it's auto-filled. Google sign-ups never
+            see this field - they have no uni_id to enter. */}
+        {uniId && (
+          <FormField
+            control={form.control}
+            name="uni_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.uniId.label')}</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      placeholder="444444444"
+                      {...field}
+                      disabled={true}
+                      className="bg-muted/60 cursor-not-allowed text-muted-foreground border-dashed opacity-70"
+                      dir="ltr"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded border">
+                      <Lock className="h-3 w-3" />
+                      {t('onboarding.uniId.autoFilled')}
+                    </div>
                   </div>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
-        {/* Full Arabic Name */}
+        {/* Full Name */}
         <FormField
           control={form.control}
           name="fullArabicName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.fullName.label')}</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.fullName.label')}<RequiredMark /></FormLabel>
               <FormControl>
                 <Input
                   placeholder={t('onboarding.fullName.placeholder')}
@@ -212,7 +238,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="saudiPhone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.phone.label')}</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.phone.label')}<RequiredMark /></FormLabel>
               <FormControl>
                 <Input
                   placeholder={t('onboarding.phone.placeholder')}
@@ -233,7 +259,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="gender"
           render={({ field }) => (
             <FormItem className="space-y-3">
-              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.gender.label')}</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.gender.label')}<RequiredMark /></FormLabel>
               <FormControl>
                 <RadioGroup
                   dir={isRTL ? 'rtl' : 'ltr'}
@@ -271,20 +297,20 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="uniLevel"
           render={({ field }) => (
             <FormItem dir={isRTL ? 'rtl' : 'ltr'}>
-              <FormLabel>{t('onboarding.level.label')}</FormLabel>
+              <FormLabel>{t('onboarding.level.label')}<OptionalMark label={t('onboarding.optional')} /></FormLabel>
               <FormControl>
                 <NativeSelect
                   {...field}
                   value={field.value?.toString() || ''}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                   disabled={isSubmitting}
                 >
-                  <NativeSelectOption value="" disabled>
+                  <NativeSelectOption value="">
                     {t('onboarding.level.placeholder')}
                   </NativeSelectOption>
                   {UNI_LEVELS.map((level) => (
                     <NativeSelectOption key={level} value={level.toString()}>
-                      {level}
+                      {level === GRADUATED_LEVEL ? t('onboarding.level.graduated') : level}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
@@ -300,13 +326,13 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           name="uniCollegeSelection"
           render={({ field }) => (
             <FormItem dir={isRTL ? 'rtl' : 'ltr'}>
-              <FormLabel>{t('onboarding.college.label')}</FormLabel>
+              <FormLabel>{t('onboarding.college.label')}<OptionalMark label={t('onboarding.optional')} /></FormLabel>
               <FormControl>
                 <NativeSelect
                   {...field}
                   disabled={isSubmitting}
                 >
-                  <NativeSelectOption value="" disabled>
+                  <NativeSelectOption value="">
                     {t('onboarding.college.placeholder')}
                   </NativeSelectOption>
                   {QU_COLLEGES.map((college) => (
@@ -329,7 +355,7 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
             name="uniCollegeOther"
             render={({ field }) => (
               <FormItem>
-                <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.collegeOther.label')}</FormLabel>
+                <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.collegeOther.label')}<RequiredMark /></FormLabel>
                 <FormControl>
                   <Input
                     placeholder={t('onboarding.collegeOther.placeholder')}
@@ -344,25 +370,43 @@ export function OnboardingForm({ uniId, onSubmit }: OnboardingFormProps) {
           />
         )}
 
-        {/* Personal Email */}
+        {/* Personal Email - locked to the Google account email for Google sign-ups,
+            otherwise an editable "not your @qu.edu.sa email" field */}
         <FormField
           control={form.control}
           name="personalEmail"
           render={({ field }) => (
             <FormItem>
-              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.email.label')}</FormLabel>
+              <FormLabel dir={isRTL ? 'rtl' : 'ltr'}>{t('onboarding.email.label')}<RequiredMark /></FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder={t('onboarding.email.placeholder')}
-                  {...field}
-                  disabled={isSubmitting}
-                  dir="ltr"
-                />
+                {lockedPersonalEmail ? (
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      disabled={true}
+                      className="bg-muted/60 cursor-not-allowed text-muted-foreground border-dashed opacity-70 pr-24"
+                      dir="ltr"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded border">
+                      <Lock className="h-3 w-3" />
+                      {t('onboarding.uniId.autoFilled')}
+                    </div>
+                  </div>
+                ) : (
+                  <Input
+                    type="email"
+                    placeholder={t('onboarding.email.placeholder')}
+                    {...field}
+                    disabled={isSubmitting}
+                    dir="ltr"
+                  />
+                )}
               </FormControl>
-              <FormDescription dir={isRTL ? 'rtl' : 'ltr'}>
-                {t('onboarding.email.description')}
-              </FormDescription>
+              {!lockedPersonalEmail && (
+                <FormDescription dir={isRTL ? 'rtl' : 'ltr'}>
+                  {t('onboarding.email.description')}
+                </FormDescription>
+              )}
               <FormMessage />
             </FormItem>
           )}

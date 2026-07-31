@@ -26,7 +26,10 @@ export const resources = {
       "auth.signUp.footer.link": "Sign In",
       "auth.signUp.error.emailExists": "An account associated with this email already exists. Please sign in instead.",
       "auth.signUp.error.unexpected": "An unexpected error occurred. Please try again. or contact support.",
-      
+      "auth.signUp.orContinueWith": "Or continue with",
+      "auth.signUp.continueWithGoogle": "Continue with Google",
+      "auth.signUp.error.googleUnexpected": "Unable to continue with Google. Please try again.",
+
       // Sign In Page
       "auth.signIn.badge": "Sign In",
       "auth.signIn.title": "Welcome Back",
@@ -46,7 +49,10 @@ export const resources = {
       "auth.signIn.error.verificationCode": "Unable to send verification code.",
       "auth.signIn.error.signInFailed": "Unable to complete sign in.",
       "auth.signIn.error.unexpected": "An unexpected error occurred.",
-      
+      "auth.signIn.orContinueWith": "Or continue with",
+      "auth.signIn.continueWithGoogle": "Continue with Google",
+      "auth.signIn.error.googleUnexpected": "Unable to continue with Google. Please try again.",
+
       // Forgot Password Page
       "auth.forgotPassword.step1.title": "Forgot Password?",
       "auth.forgotPassword.step1.description": "Enter your University ID to receive a password reset code",
@@ -108,6 +114,7 @@ export const resources = {
       "profile.title": "Welcome!",
       "profile.titleWithName": "Welcome, {{name}}",
       "profile.description": "You have successfully signed in. You can manage your account here",
+      "profile.goToMainApp": "Go to GDG-Q",
       "profile.signOutTab": "sign-out",
       "profile.signOutTitle": "Sign Out",
       "profile.signOutDescription": "Are you sure you want to sign out",
@@ -140,11 +147,12 @@ export const resources = {
       "onboarding.fullName.placeholder": "Example: Ibrahim Mohammed Bassam Al-Harbi",
       "onboarding.phone.label": "Phone Number",
       "onboarding.phone.placeholder": "05xxxxxxxx",
-      "onboarding.gender.label": "Section",
-      "onboarding.gender.male": "Male Students",
-      "onboarding.gender.female": "Female Students",
+      "onboarding.gender.label": "Gender",
+      "onboarding.gender.male": "Male",
+      "onboarding.gender.female": "Female",
       "onboarding.level.label": "Academic Level",
       "onboarding.level.placeholder": "Choose level",
+      "onboarding.level.graduated": "Graduated",
       "onboarding.college.label": "College",
       "onboarding.college.placeholder": "Choose college",
       "onboarding.college.other": "Other",
@@ -153,19 +161,21 @@ export const resources = {
       "onboarding.email.label": "Personal Email",
       "onboarding.email.placeholder": "example@example.com",
       "onboarding.email.description": "Personal email, not ending with @qu.edu.sa",
+      "onboarding.optional": "Optional",
       "onboarding.submit": "Complete Registration",
       "onboarding.submitting": "Completing Registration...",
-      
+
+      // Welcome Back Dialog (shown when an existing record is auto-linked by email)
+      "welcomeBack.title": "Welcome back! 🎉",
+      "welcomeBack.descriptionWithPoints": "We found activity already on file under this email and linked it to your account. You've already got {{points}} points on the board!",
+      "welcomeBack.descriptionNoPoints": "We found activity already on file under this email and linked it to your account.",
+      "welcomeBack.continue": "Let's go",
+
       // Onboarding Validation Messages
-      "onboarding.validation.fullName.required": "Full Arabic name is required",
-      "onboarding.validation.fullName.arabicOnly": "Name must be in Arabic characters only",
+      "onboarding.validation.fullName.required": "Full name is required",
       "onboarding.validation.phone.length": "Phone number must be exactly 10 digits",
       "onboarding.validation.phone.format": "Phone number must start with 05 followed by 8 digits",
       "onboarding.validation.gender.required": "Please select a gender",
-      "onboarding.validation.level.required": "Please select your level",
-      "onboarding.validation.level.min": "Level must be between 1 and 10",
-      "onboarding.validation.level.max": "Level must be between 1 and 10",
-      "onboarding.validation.college.required": "Please select your college",
       "onboarding.validation.collegeOther.required": "Please enter your college name",
       "onboarding.validation.email.invalid": "Invalid email address",
       "onboarding.validation.email.notQuEmail": "Personal email cannot be a @qu.edu.sa address",
@@ -196,7 +206,10 @@ export const resources = {
       "auth.signUp.footer.link": "تسجيل الدخول",
       "auth.signUp.error.emailExists": "البريد الإلكتروني موجود من قبل. سجّل دخول بدلاً من ذلك.",
       "auth.signUp.error.unexpected": "حدث خطأ غير متوقع. حاول مرة ثانية أو تواصل مع الدعم الفني.",
-      
+      "auth.signUp.orContinueWith": "أو تابع باستخدام",
+      "auth.signUp.continueWithGoogle": "المتابعة باستخدام Google",
+      "auth.signUp.error.googleUnexpected": "تعذّرت المتابعة باستخدام Google. حاول مرة ثانية.",
+
       // Sign In Page (Saudi Arabic)
       "auth.signIn.badge": "تسجيل الدخول",
       "auth.signIn.title": "مرحباً بك من جديد",
@@ -216,7 +229,10 @@ export const resources = {
       "auth.signIn.error.verificationCode": "تعذر إرسال رمز التحقق.",
       "auth.signIn.error.signInFailed": "تعذر إكمال تسجيل الدخول.",
       "auth.signIn.error.unexpected": "حدث خطأ غير متوقع.",
-      
+      "auth.signIn.orContinueWith": "أو تابع باستخدام",
+      "auth.signIn.continueWithGoogle": "المتابعة باستخدام Google",
+      "auth.signIn.error.googleUnexpected": "تعذّرت المتابعة باستخدام Google. حاول مرة ثانية.",
+
       // Forgot Password Page (Saudi Arabic)
       "auth.forgotPassword.step1.title": "نسيت كلمة المرور؟",
       "auth.forgotPassword.step1.description": "أدخل رقمك الجامعي عشان نرسل لك رمز إعادة تعيين كلمة المرور",
@@ -278,6 +294,7 @@ export const resources = {
       "profile.title": "حياك الله!",
       "profile.titleWithName": "حياك، {{name}}",
       "profile.description": "تم تسجيل دخولك بنجاح. تقدر تتحكم بحسابك من هنا",
+      "profile.goToMainApp": "روح لموقع GDG-Q",
       "profile.signOutTab": "sign-out",
       "profile.signOutTitle": "تسجيل الخروج",
       "profile.signOutDescription": "متأكد إنك تبي تسجّل خروج؟",
@@ -310,11 +327,12 @@ export const resources = {
       "onboarding.fullName.placeholder": "مثال: ابراهيم محمد بسام الحربي",
       "onboarding.phone.label": "رقم الجوال",
       "onboarding.phone.placeholder": "05xxxxxxxx",
-      "onboarding.gender.label": "القسم",
-      "onboarding.gender.male": "طلاب",
-      "onboarding.gender.female": "طالبات",
+      "onboarding.gender.label": "الجنس",
+      "onboarding.gender.male": "ذكر",
+      "onboarding.gender.female": "أنثى",
       "onboarding.level.label": "المستوى الدراسي",
       "onboarding.level.placeholder": "اختر المستوى",
+      "onboarding.level.graduated": "خريج",
       "onboarding.college.label": "الكلية",
       "onboarding.college.placeholder": "اختر الكلية",
       "onboarding.college.other": "أخرى",
@@ -323,19 +341,21 @@ export const resources = {
       "onboarding.email.label": "البريد الشخصي",
       "onboarding.email.placeholder": "example@example.com",
       "onboarding.email.description": "البريد الشخصي وليس المنتهي بـ qu.edu.sa@",
+      "onboarding.optional": "اختياري",
       "onboarding.submit": "إكمال التسجيل",
       "onboarding.submitting": "جاري إكمال التسجيل...",
-      
+
+      // Welcome Back Dialog (Saudi Arabic)
+      "welcomeBack.title": "هلا فيك! 🎉",
+      "welcomeBack.descriptionWithPoints": "لقينا نشاط سابق مسجل على نفس الإيميل وربطناه بحسابك. عندك الحين {{points}} نقطة في رصيدك!",
+      "welcomeBack.descriptionNoPoints": "لقينا نشاط سابق مسجل على نفس الإيميل وربطناه بحسابك.",
+      "welcomeBack.continue": "يلا نبدأ",
+
       // Onboarding Validation Messages (Saudi Arabic)
-      "onboarding.validation.fullName.required": "الاسم الرباعي مطلوب",
-      "onboarding.validation.fullName.arabicOnly": "الاسم لازم يكون بالحروف العربية فقط",
+      "onboarding.validation.fullName.required": "الاسم الكامل مطلوب",
       "onboarding.validation.phone.length": "رقم الجوال لازم يكون 10 أرقام بالضبط",
       "onboarding.validation.phone.format": "رقم الجوال لازم يبدأ بـ 05 متبوعاً بـ 8 أرقام",
-      "onboarding.validation.gender.required": "يرجى اختيار القسم",
-      "onboarding.validation.level.required": "يرجى اختيار مستواك الدراسي",
-      "onboarding.validation.level.min": "المستوى لازم يكون بين 1 و 10",
-      "onboarding.validation.level.max": "المستوى لازم يكون بين 1 و 10",
-      "onboarding.validation.college.required": "يرجى اختيار الكلية",
+      "onboarding.validation.gender.required": "يرجى اختيار الجنس",
       "onboarding.validation.collegeOther.required": "يرجى إدخال اسم كليتك",
       "onboarding.validation.email.invalid": "البريد الإلكتروني غير صحيح",
       "onboarding.validation.email.notQuEmail": "البريد الشخصي ما يقدر يكون بنطاق qu.edu.sa@",
