@@ -137,7 +137,12 @@ function SignInContent() {
             return
         }
         await handleComplete(result.createdSessionId)
-      } else if (result.status === 'needs_second_factor') {
+      } else if (
+        result.status === 'needs_second_factor' ||
+        // Clerk's newer "Device Trust" feature returns this status for new-device
+        // sign-ins; it's not yet in the installed @clerk SDK's type definitions.
+        (result.status as string) === 'needs_client_trust'
+      ) {
         const emailAddressId = result.supportedSecondFactors?.find(
           (factor) => factor.strategy === 'email_code'
         )?.emailAddressId
