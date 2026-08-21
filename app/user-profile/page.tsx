@@ -1,17 +1,20 @@
 'use client'
 
-import { UserProfile, UserButton, useUser, useClerk } from '@clerk/nextjs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { UserProfile, useUser, useClerk } from '@clerk/nextjs'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LogOut } from 'lucide-react'
+import { LogOut, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clearRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import * as React from 'react'
-import { useTranslation } from '@/lib/i18n/client'
+import { useTranslation, useLanguage } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/components/language-switcher'
+
+const MAIN_APP_URL = 'https://gdg-q.com'
 
 export default function SignedInPage() {
   const { t } = useTranslation()
+  const { isRTL } = useLanguage()
   const { user, isLoaded } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
@@ -76,37 +79,61 @@ export default function SignedInPage() {
     )
   }
 
+  const displayName = fullArabicName || t('profile.userCard.defaultName')
+  const initial = (fullArabicName || user?.primaryEmailAddress?.emailAddress || '?').trim().charAt(0).toUpperCase()
+  const GoArrow = isRTL ? ArrowLeft : ArrowRight
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center py-12 px-4 relative">
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center py-12 px-4 relative">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
-      <div className="w-full max-w-4xl space-y-8 flex flex-col items-center">
-        {/* Welcome Message Card */}
-        <Card className="w-full bg-gradient-to-br from-green-50/50 to-white rounded-2xl shadow-lg border border-slate-200">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
-              {fullArabicName ? t('profile.titleWithName', { name: fullArabicName }) : t('profile.title')}
-            </CardTitle>
-            <CardDescription className="text-lg mt-2">
-              {t('profile.description')}
-            </CardDescription>
-          </CardHeader>
+      <div className="w-full max-w-3xl space-y-6">
+        {/* Header */}
+        <Card className="border-border/60">
+          <CardContent className="flex flex-col sm:flex-row items-center gap-5 py-2">
+            {user?.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.imageUrl}
+                alt={displayName}
+                className="h-16 w-16 rounded-full object-cover ring-1 ring-border shrink-0"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-semibold shrink-0">
+                {initial}
+              </div>
+            )}
+
+            <div className="flex-1 min-w-0 text-center sm:text-start">
+              <h1 className="text-xl font-semibold truncate">
+                {fullArabicName ? t('profile.titleWithName', { name: fullArabicName }) : t('profile.title')}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">{t('profile.description')}</p>
+            </div>
+
+            <Button asChild size="lg" className="shrink-0 w-full sm:w-auto">
+              <a href={MAIN_APP_URL}>
+                {t('profile.goToMainApp')}
+                <GoArrow className="h-4 w-4" />
+              </a>
+            </Button>
+          </CardContent>
         </Card>
 
         {/* User Profile Component */}
         <div className="w-full flex justify-center">
-          <UserProfile 
+          <UserProfile
             appearance={{
               elements: {
                 rootBox: "w-full",
-                card: "shadow-xl rounded-2xl border border-slate-200",
+                card: "shadow-sm rounded-2xl border border-border/60",
               }
             }}
           >
-            <UserProfile.Page 
+            <UserProfile.Page
               label={t('profile.signOutTab')}
-              labelIcon={<SignOutIcon />} 
+              labelIcon={<SignOutIcon />}
               url="sign-out"
             >
               <SignOutPage />

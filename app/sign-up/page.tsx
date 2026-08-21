@@ -19,6 +19,7 @@ import { saveRedirectUrl } from '@/lib/redirect-storage'
 import { AlertCircle, Loader2, UserPlus } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { GoogleIcon } from '@/components/icons/google-icon'
 
 // Schema will be created inside component to access t function
 const createSignUpSchema = (t: (key: string) => string) => z.object({
@@ -55,6 +56,7 @@ function SignUpContent() {
   const [pendingVerification, setPendingVerification] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -135,6 +137,23 @@ function SignUpContent() {
     })
   }
 
+  const handleGoogleSignUp = async () => {
+    if (!isLoaded) return
+    setError('')
+    setGoogleLoading(true)
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: '/sign-up/sso-callback',
+        redirectUrlComplete: '/onboarding',
+      })
+    } catch (err) {
+      console.error('Google sign-up error:', err)
+      setError(t('auth.signUp.error.googleUnexpected'))
+      setGoogleLoading(false)
+    }
+  }
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -192,6 +211,32 @@ function SignUpContent() {
             </Alert>
           )}
 
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mb-4"
+            disabled={loading || googleLoading}
+            onClick={handleGoogleSignUp}
+          >
+            {googleLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <GoogleIcon className="mr-2 h-4 w-4" />
+            )}
+            {t('auth.signUp.continueWithGoogle')}
+          </Button>
+
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                {t('auth.signUp.orContinueWith')}
+              </span>
+            </div>
+          </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-4" autoComplete="on">
               <FormField
@@ -209,7 +254,7 @@ function SignUpContent() {
                           autoComplete="username"
                           maxLength={9}
                           className="border-0 rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                          disabled={loading}
+                          disabled={loading || googleLoading}
                           {...field}
                         />
                         <span className="inline-flex items-center px-3 h-10 bg-background text-muted-foreground text-sm border-l border-input rounded-r-md">
@@ -232,7 +277,7 @@ function SignUpContent() {
                       <PasswordInput
                         placeholder={t('auth.signUp.passwordPlaceholder')}
                         autoComplete="new-password"
-                        disabled={loading}
+                        disabled={loading || googleLoading}
                         {...field}
                       />
                     </FormControl>
@@ -244,7 +289,7 @@ function SignUpContent() {
               {/* Clerk CAPTCHA - Only shows when suspicious activity is detected */}
               <div id="clerk-captcha" />
 
-              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
+              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading || googleLoading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

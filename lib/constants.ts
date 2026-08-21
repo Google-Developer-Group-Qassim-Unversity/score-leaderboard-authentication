@@ -18,7 +18,9 @@ export const QU_COLLEGES = [
 
 export type QUCollege = (typeof QU_COLLEGES)[number]
 
-// University levels (1-10)
-export const UNI_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
+// University levels (1-10), plus a sentinel value for members who've already graduated
+export const GRADUATED_LEVEL = 11
+
+export const UNI_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, GRADUATED_LEVEL] as const
 
 export type UniLevel = (typeof UNI_LEVELS)[number]
