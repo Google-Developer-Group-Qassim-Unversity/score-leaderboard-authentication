@@ -54,18 +54,22 @@ export async function getMemberPoints(memberId: number): Promise<MemberPointsRes
   }
 }
 
-export async function createMember(): Promise<CreateMemberResponse | null> {
+export type CreateMemberResult =
+  | { ok: true; data: CreateMemberResponse }
+  | { ok: false; status: number | null }
+
+export async function createMember(): Promise<CreateMemberResult> {
   const { getToken } = await auth()
   const token = await getToken()
-  
+
   if (!token) {
     console.error('[createMember] ❌ Failed to retrieve auth token')
-    return null
+    return { ok: false, status: null }
   }
 
   try {
     console.log(`[createMember] 🔍 Creating member from JWT token...`)
-    
+
     const response = await fetch(`${API_BASE_URL}/members`, {
       method: "POST",
       headers: {
@@ -75,17 +79,17 @@ export async function createMember(): Promise<CreateMemberResponse | null> {
     })
 
     if (!response.ok) {
-      console.warn(`[createMember] ⚠️ Skipping member creation ${response.status}: ${response.statusText}`)
-      return null
+      console.warn(`[createMember] ⚠️ Failed to create member ${response.status}: ${response.statusText}`)
+      return { ok: false, status: response.status }
     }
 
     const data: CreateMemberResponse = await response.json()
     console.log(`✅ Successfully created member ${data.member.id}\n${JSON.stringify(data)}`)
-    return data
+    return { ok: true, data }
 
   } catch (error) {
     console.error(`❌ Failed to create member:`, error)
-    return null
+    return { ok: false, status: null }
   }
 }
 

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
-import { updateUserMetadata} from './_actions'
+import { updateUserMetadata, addVerifiedPersonalEmail } from './_actions'
 import { isAllowedRedirectUrl } from '@/lib/redirect-config'
 import { saveRedirectUrl, getValidatedRedirectUrl } from '@/lib/redirect-storage'
 import { UserAccountCard } from '@/components/user-account-card'
@@ -49,26 +49,48 @@ export default function OnboardingPage() {
     }
   }, [searchParams])
 
-  // Creates a fresh member row in the backend and navigates on to /user-profile.
+  // Creates a fresh member row in the backend, THEN marks onboarding complete
+  // and navigates on to /user-profile. Onboarding is only marked complete once
+  // the backend record actually exists - otherwise a user could get stuck with
+  // a fully-onboarded Clerk account but no backend member row and no way back
+  // into this form to fix it (e.g. their personal email collided with another
+  // account's email - see the 409 branch below).
+  //
   // If the backend auto-linked an existing (admin-created) record by email, show
   // a "welcome back" dialog with their existing points before moving on.
-  const finishAsNewMember = async () => {
-    const memberCreated = await createMember()
-    if (!memberCreated) {
-      console.log('⚠️ Skipping member creation in backend!')
-      console.log(`request was made to: ${process.env.NEXT_PUBLIC_HOST}/members`)
-      console.log(`member data: ${user?.publicMetadata.fullArabicName}`)
-      console.log(`member data: ${user?.publicMetadata.saudiPhone}`)
-      console.log(`member data: ${user?.publicMetadata.gender}`)
-      console.log(`member data: ${user?.publicMetadata.uniLevel}`)
-      console.log(`member data: ${user?.publicMetadata.uniCollege}`)
-      console.log(`member data: ${user?.publicMetadata.personalEmail}`)
-      router.push('/user-profile')
+  const finishAsNewMember = async (data: OnboardingFormValues) => {
+    const result = await createMember()
+
+    if (!result.ok) {
+      if (result.status === 409) {
+        setError(t('onboarding.submitError.emailInUse'))
+      } else {
+        console.warn(`[onboarding] member creation failed, status: ${result.status}`)
+        setError(t('onboarding.submitError.generic'))
+      }
       return
     }
 
-    if (memberCreated.already_exists) {
-      const points = await getMemberPoints(memberCreated.member.id)
+    // Best-effort: link the typed personal email to this Clerk account as a
+    // verified secondary email so a future Google sign-up under that email
+    // auto-links instead of creating a duplicate account. Never blocks
+    // onboarding - addVerifiedPersonalEmail swallows its own errors and is a
+    // no-op for Google sign-ups (googleEmail already proves their ownership).
+    if (!googleEmail) {
+      await addVerifiedPersonalEmail(data.personalEmail)
+    }
+
+    // Now that the backend member row exists, mark onboarding complete.
+    // updateUserMetadata replaces publicMetadata wholesale, so re-send the
+    // form data alongside the flag rather than just { onboardingComplete: true }.
+    const completeResult = await updateUserMetadata({ ...data, onboardingComplete: true })
+    if (completeResult.error) {
+      setError(completeResult.error)
+      return
+    }
+
+    if (result.data.already_exists) {
+      const points = await getMemberPoints(result.data.member.id)
       setWelcomeBackPoints(points?.member.total_points ?? null)
       setShowWelcomeBack(true)
       return
@@ -89,9 +111,10 @@ export default function OnboardingPage() {
     setError('')
 
     try {
-      // Step 1: Update Clerk JWT metadata with the form data
-      const result = await updateUserMetadata({...data, onboardingComplete: true })
-
+      // Step 1: Save the form data to Clerk metadata. onboardingComplete stays
+      // false here - it's only flipped to true after the backend member row
+      // is confirmed to exist, in finishAsNewMember.
+      const result = await updateUserMetadata({ ...data, onboardingComplete: false })
 
       if (result.error) {
         setError(result.error)
@@ -103,7 +126,7 @@ export default function OnboardingPage() {
 
         // Step 2: Create member in backend DB. If an admin-created record already
         // exists with this Clerk-verified email, the backend folds it in automatically.
-        await finishAsNewMember()
+        await finishAsNewMember(data)
       } else {
         setError('Unexpected response from server. Please try again.')
       }

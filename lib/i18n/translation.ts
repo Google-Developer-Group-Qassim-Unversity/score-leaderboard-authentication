@@ -179,6 +179,10 @@ export const resources = {
       "onboarding.validation.collegeOther.required": "Please enter your college name",
       "onboarding.validation.email.invalid": "Invalid email address",
       "onboarding.validation.email.notQuEmail": "Personal email cannot be a @qu.edu.sa address",
+
+      // Onboarding Submission Errors
+      "onboarding.submitError.emailInUse": "This email is already in use by another account. Please use a different email.",
+      "onboarding.submitError.generic": "We couldn't finish setting up your account. Please try again.",
     }
   },
   ar: {
@@ -359,6 +363,10 @@ export const resources = {
       "onboarding.validation.collegeOther.required": "يرجى إدخال اسم كليتك",
       "onboarding.validation.email.invalid": "البريد الإلكتروني غير صحيح",
       "onboarding.validation.email.notQuEmail": "البريد الشخصي ما يقدر يكون بنطاق qu.edu.sa@",
+
+      // Onboarding Submission Errors (Saudi Arabic)
+      "onboarding.submitError.emailInUse": "هذا البريد الإلكتروني مستخدم في حساب ثاني. جرّب بريد إلكتروني مختلف.",
+      "onboarding.submitError.generic": "ما قدرنا نكمّل إعداد حسابك. حاول مرة ثانية.",
     }
   }
 } as const;
