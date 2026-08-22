@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
-# Next.js standalone self-host build (Next 15, pnpm).
+# Next.js standalone self-host build (Next 16, pnpm). Requires Node >=20.9.
 # Public vars are baked at build via build-args; server-only secrets arrive at runtime via env_file.
 
-ARG NODE_VERSION=18-alpine
+ARG NODE_VERSION=20-alpine
 
 ARG PNPM_VERSION=10.23.0
 
