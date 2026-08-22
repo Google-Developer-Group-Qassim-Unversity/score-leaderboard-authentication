@@ -14,7 +14,7 @@ export const resources = {
       // Sign Up Page
       "auth.signUp.badge": "New Account",
       "auth.signUp.title": "Create Account",
-      "auth.signUp.description": "Sign up with your QU email address",
+      "auth.signUp.description": "Create your GDG-Q account",
       "auth.signUp.universityId": "University ID",
       "auth.signUp.universityIdPlaceholder": "442106350",
       "auth.signUp.password": "Password",
@@ -198,7 +198,7 @@ export const resources = {
       // Sign Up Page (Saudi Arabic)
       "auth.signUp.badge": "حساب جديد",
       "auth.signUp.title": "إنشاء حساب",
-      "auth.signUp.description": "سجّل باستخدام بريدك الجامعي في جامعة القصيم",
+      "auth.signUp.description": "أنشئ حسابك في GDG-Q",
       "auth.signUp.universityId": "الرقم الجامعي",
       "auth.signUp.universityIdPlaceholder": "442106350",
       "auth.signUp.password": "كلمة المرور",
