@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useUser, useAuth } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -19,6 +19,7 @@ import { WelcomeBackDialog } from '@/components/welcome-back-dialog'
 
 export default function OnboardingPage() {
   const { user } = useUser()
+  const { getToken } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = React.useState('')
@@ -96,14 +97,22 @@ export default function OnboardingPage() {
       return
     }
 
+    // updateUserMetadata sets onboardingComplete via the backend Clerk API, which
+    // does not update the current session's JWT. Middleware gates /user-profile
+    // on sessionClaims.metadata.onboardingComplete read from that JWT, so without
+    // forcing a refresh here it still sees the stale (false) value and bounces
+    // this navigation straight back to /onboarding.
+    await getToken({ skipCache: true })
+
     // Trigger navigation to let middleware handle redirect.
     // Middleware will read redirect_url from localStorage and redirect appropriately
     router.push('/user-profile')
     console.log('✅ Onboarding complete, navigating to user-profile')
   }
 
-  const handleWelcomeBackContinue = () => {
+  const handleWelcomeBackContinue = async () => {
     setShowWelcomeBack(false)
+    await getToken({ skipCache: true })
     router.push('/user-profile')
   }
 
