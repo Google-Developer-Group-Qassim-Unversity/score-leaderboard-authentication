@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { ClerkProvider } from "@clerk/nextjs"
-import { Analytics } from "@vercel/analytics/next"
 import { LanguageProvider } from "./providers"
 import "./globals.css"
 
@@ -26,7 +25,6 @@ export default function RootLayout({
           <LanguageProvider>
             {children}
           </LanguageProvider>
-          <Analytics />
         </body>
       </html>
     </ClerkProvider>
